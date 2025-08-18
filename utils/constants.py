@@ -2,7 +2,7 @@ import os
 
 from utils.config import APP_TYPE
 
-DEFAULT_DEPARTMENT = ["内科", "消化器内科", "整形外科", "眼科"]
+DEFAULT_DEPARTMENT = ["default","内科", "消化器内科", "整形外科"]
 DEFAULT_DOCTOR = ["default"]
 
 DEPARTMENT_DOCTORS_MAPPING = {
@@ -10,8 +10,8 @@ DEPARTMENT_DOCTORS_MAPPING = {
 }
 
 DEFAULT_DOCUMENT_TYPE = "退院時サマリ"
-DOCUMENT_TYPES = ["退院時サマリ"]
-DOCUMENT_NAME_OPTIONS = ["退院時サマリ", "すべて"]
+DOCUMENT_TYPES = ["退院時サマリ", "現病歴", "通院サマリ"]
+DOCUMENT_NAME_OPTIONS = ["退院時サマリ", "現病歴", "通院サマリ", "すべて"]
 
 DEFAULT_SECTION_NAMES = [
     "入院期間", "現病歴", "入院時検査", "入院中の治療経過", "退院申し送り", "備考"
