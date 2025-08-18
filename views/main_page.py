@@ -15,7 +15,6 @@ def clear_inputs():
     st.session_state.summary_generation_time = None
     st.session_state.clear_input = True
     st.session_state.selected_document_type = DOCUMENT_TYPES[0]
-    st.session_state.referral_purpose = DOCUMENT_TYPE_TO_PURPOSE_MAPPING.get(DOCUMENT_TYPES[0], "")
 
     for key in list(st.session_state.keys()):
         if key.startswith("input_text"):
