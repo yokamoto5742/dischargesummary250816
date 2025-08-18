@@ -5,7 +5,7 @@ import pandas as pd
 import streamlit as st
 
 from database.db import DatabaseManager
-from utils.constants import DOCUMENT_TYPE_OPTIONS, MESSAGES
+from utils.constants import DOCUMENT_NAME_OPTIONS, MESSAGES
 from utils.error_handlers import handle_error
 from ui_components.navigation import change_page
 
@@ -42,7 +42,7 @@ def usage_statistics_ui():
         end_date = st.date_input("終了日", today)
 
     with col4:
-        selected_document_type = st.selectbox("文書名", DOCUMENT_TYPE_OPTIONS, index=0)
+        selected_document_type = st.selectbox("文書名", DOCUMENT_NAME_OPTIONS, index=0)
 
     start_datetime = datetime.datetime.combine(start_date, datetime.time.min)
     end_datetime = datetime.datetime.combine(end_date, datetime.time.max)
