@@ -67,7 +67,12 @@ def render_sidebar():
         save_user_settings(selected_dept, st.session_state.selected_model, st.session_state.selected_doctor)
         st.rerun()
 
-    if len(available_doctors) > 1:
+    unique_display_names = set()
+    for doctor in available_doctors:
+        display_name = "医師共通" if doctor == "default" else doctor
+        unique_display_names.add(display_name)
+
+    if len(unique_display_names) > 1:
         selected_doctor = st.sidebar.selectbox(
             "医師名",
             available_doctors,

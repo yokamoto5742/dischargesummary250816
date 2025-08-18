@@ -25,16 +25,10 @@ def render_input_section():
     if "clear_input" not in st.session_state:
         st.session_state.clear_input = False
 
-    referral_purpose = st.text_area(
-        "紹介目的",
-        height=70,
-        key="referral_purpose"
-    )
-
     current_prescription = st.text_area(
-        "現在の処方",
+        "退院時処方(現在の処方)",
         height=70,
-        placeholder="現在の処方内容を入力してください...",
+        placeholder="処方内容を入力してください...",
         key="current_prescription"
     )
 
