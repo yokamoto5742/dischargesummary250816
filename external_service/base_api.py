@@ -14,27 +14,15 @@ class BaseAPIClient(ABC):
 
     @abstractmethod
     def initialize(self) -> bool:
-        """APIクライアントを初期化します。成功時はTrueを返し、失敗時は例外を投げます。"""
         pass
 
     @abstractmethod
     def _generate_content(self, prompt: str, model_name: str) -> Tuple[str, int, int]:
-        """
-        プロンプトから要約を生成します。
-        Args:
-            prompt: 生成用プロンプト
-            model_name: 使用するモデル名
-        Returns:
-            Tuple[str, int, int]: (生成された要約, 入力トークン数, 出力トークン数)
-        Raises:
-            APIError: API呼び出しに失敗した場合
-        """
         pass
 
     def create_summary_prompt(self,
                               medical_text: str,
                               additional_info: str = "",
-                              referral_purpose: str = "",
                               current_prescription: str = "",
                               department: str = "default",
                               document_type: str = DEFAULT_DOCUMENT_TYPE,
@@ -48,9 +36,6 @@ class BaseAPIClient(ABC):
             prompt_template = prompt_data['content']
 
         prompt = f"{prompt_template}\n【カルテ情報】\n{medical_text}"
-
-        if referral_purpose.strip():
-            prompt += f"\n【紹介目的】\n{referral_purpose}"
 
         if current_prescription.strip():
             prompt += f"\n【現在の処方】\n{current_prescription}"
@@ -89,8 +74,7 @@ class BaseAPIClient(ABC):
                 referral_purpose,
                 current_prescription,
                 department,
-                document_type,
-                doctor
+                document_type
             )
 
             return self._generate_content(prompt, model_name)

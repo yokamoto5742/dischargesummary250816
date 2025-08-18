@@ -2,8 +2,7 @@ import streamlit as st
 
 from database.db import DatabaseManager
 from utils.config import CLAUDE_API_KEY, GEMINI_CREDENTIALS, GEMINI_FLASH_MODEL, GEMINI_MODEL
-from utils.constants import APP_TYPE, DEFAULT_DEPARTMENT, DOCUMENT_TYPES, DEPARTMENT_DOCTORS_MAPPING, \
-    DEFAULT_DOCUMENT_TYPE, DOCUMENT_TYPE_TO_PURPOSE_MAPPING
+from utils.constants import APP_TYPE, DEFAULT_DEPARTMENT, DOCUMENT_TYPES, DEPARTMENT_DOCTORS_MAPPING,DEFAULT_DOCUMENT_TYPE
 from utils.prompt_manager import get_prompt
 
 

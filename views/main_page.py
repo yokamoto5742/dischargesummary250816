@@ -1,7 +1,7 @@
 import streamlit as st
 
 from services.summary_service import process_summary
-from utils.constants import MESSAGES, TAB_NAMES, DOCUMENT_TYPES, DOCUMENT_TYPE_TO_PURPOSE_MAPPING
+from utils.constants import MESSAGES, TAB_NAMES, DOCUMENT_TYPES
 from utils.error_handlers import handle_error
 from ui_components.navigation import render_sidebar
 
@@ -69,12 +69,11 @@ def render_summary_results():
         if st.session_state.parsed_summary:
             tabs = st.tabs([
                 TAB_NAMES["ALL"],
-                TAB_NAMES["MAIN_DISEASE"],
-                TAB_NAMES["PURPOSE"],
-                TAB_NAMES["HISTORY"],
-                TAB_NAMES["SYMPTOMS"],
-                TAB_NAMES["TREATMENT"],
-                TAB_NAMES["PRESCRIPTION"],
+                TAB_NAMES["ADMISSION_PERIOD"],
+                TAB_NAMES["CURRENT_ILLNESS"],
+                TAB_NAMES["ADMISSION_TESTS"],
+                TAB_NAMES["TREATMENT_PROGRESS"],
+                TAB_NAMES["DISCHARGE_NOTES"],
                 TAB_NAMES["NOTE"]
             ])
 
