@@ -113,7 +113,7 @@ def process_summary(input_text: str,
 
 
 def validate_api_credentials() -> None:
-    if not any([GEMINI_CREDENTIALS, CLAUDE_API_KEY, OPENAI_API_KEY]):
+    if not any([GEMINI_CREDENTIALS, CLAUDE_API_KEY]):
         raise APIError(MESSAGES["NO_API_CREDENTIALS"])
 
 
