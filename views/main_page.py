@@ -77,7 +77,6 @@ def render_summary_results():
                         )
 
             sections = [
-                TAB_NAMES["ALL"],
                 TAB_NAMES["ADMISSION_PERIOD"],
                 TAB_NAMES["CURRENT_ILLNESS"],
                 TAB_NAMES["ADMISSION_TESTS"],
