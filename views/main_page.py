@@ -77,12 +77,12 @@ def render_summary_results():
                         )
 
             sections = [
-                TAB_NAMES["MAIN_DISEASE"],
-                TAB_NAMES["PURPOSE"],
-                TAB_NAMES["HISTORY"],
-                TAB_NAMES["SYMPTOMS"],
-                TAB_NAMES["TREATMENT"],
-                TAB_NAMES["PRESCRIPTION"],
+                TAB_NAMES["ALL"],
+                TAB_NAMES["ADMISSION_PERIOD"],
+                TAB_NAMES["CURRENT_ILLNESS"],
+                TAB_NAMES["ADMISSION_TESTS"],
+                TAB_NAMES["TREATMENT_PROGRESS"],
+                TAB_NAMES["DISCHARGE_NOTES"],
                 TAB_NAMES["NOTE"]
             ]
             for i, section in enumerate(sections, 1):
