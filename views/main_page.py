@@ -1,7 +1,7 @@
 import streamlit as st
 
 from services.summary_service import process_summary
-from utils.constants import MESSAGES, TAB_NAMES, DOCUMENT_TYPES
+from utils.constants import MESSAGES, TAB_NAMES, DOCUMENT_TYPES, DEFAULT_SECTION_NAMES
 from utils.error_handlers import handle_error
 from ui_components.navigation import render_sidebar
 
@@ -76,15 +76,7 @@ def render_summary_results():
                         height=150
                         )
 
-            sections = [
-                TAB_NAMES["ADMISSION_PERIOD"],
-                TAB_NAMES["CURRENT_ILLNESS"],
-                TAB_NAMES["ADMISSION_TESTS"],
-                TAB_NAMES["TREATMENT_PROGRESS"],
-                TAB_NAMES["DISCHARGE_NOTES"],
-                TAB_NAMES["NOTE"]
-            ]
-            for i, section in enumerate(sections, 1):
+            for i, section in enumerate(DEFAULT_SECTION_NAMES, 1):
                 with tabs[i]:
                     section_content = st.session_state.parsed_summary.get(section, "")
                     st.code(section_content,
