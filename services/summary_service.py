@@ -27,7 +27,6 @@ def generate_summary_task(input_text: str,
                           selected_model: str,
                           result_queue: queue.Queue,
                           additional_info: str = "",
-                          referral_purpose: str = "",
                           current_prescription: str = "",
                           selected_document_type: str = DEFAULT_DOCUMENT_TYPE,
                           selected_doctor: str = "default",
@@ -54,7 +53,6 @@ def generate_summary_task(input_text: str,
             provider=provider,
             medical_text=input_text,
             additional_info=additional_info,
-            referral_purpose=referral_purpose,
             current_prescription=current_prescription,
             department=normalized_dept,
             document_type=normalized_doc_type,
@@ -87,7 +85,6 @@ def generate_summary_task(input_text: str,
 @handle_error
 def process_summary(input_text: str,
                     additional_info: str = "",
-                    referral_purpose: str = "",
                     current_prescription: str = "") -> None:
     validate_api_credentials()
     validate_input_text(input_text)
@@ -98,7 +95,6 @@ def process_summary(input_text: str,
         result = execute_summary_generation_with_ui(
             input_text,
             additional_info,
-            referral_purpose,
             current_prescription,
             session_params
         )
@@ -145,7 +141,6 @@ def get_session_parameters() -> Dict[str, Any]:
 
 def execute_summary_generation_with_ui(input_text: str,
                                        additional_info: str,
-                                       referral_purpose: str,
                                        current_prescription: str,
                                        session_params: Dict[str, Any]) -> Dict[str, Any]:
     start_time = datetime.datetime.now()
@@ -160,7 +155,6 @@ def execute_summary_generation_with_ui(input_text: str,
             session_params["selected_model"],
             result_queue,
             additional_info,
-            referral_purpose,
             current_prescription,
             session_params["selected_document_type"],
             session_params["selected_doctor"],

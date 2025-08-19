@@ -56,7 +56,6 @@ class BaseAPIClient(ABC):
     def generate_summary(self,
                          medical_text: str,
                          additional_info: str = "",
-                         referral_purpose: str = "",
                          current_prescription: str = "",
                          department: str = "default",
                          document_type: str = DEFAULT_DOCUMENT_TYPE,
@@ -71,7 +70,6 @@ class BaseAPIClient(ABC):
             prompt = self.create_summary_prompt(
                 medical_text,
                 additional_info,
-                referral_purpose,
                 current_prescription,
                 department,
                 document_type

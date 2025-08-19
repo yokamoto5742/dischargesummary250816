@@ -50,7 +50,7 @@ def render_input_section():
 
     with col1:
         if st.button("作成", type="primary"):
-            process_summary(input_text, additional_info, referral_purpose, current_prescription)
+            process_summary(input_text, additional_info, current_prescription)
 
     with col2:
         if st.button("テキストをクリア", on_click=clear_inputs):
