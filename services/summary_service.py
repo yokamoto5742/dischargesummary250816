@@ -11,8 +11,8 @@ from database.db import DatabaseManager
 from external_service.api_factory import generate_summary
 from utils.config import (CLAUDE_API_KEY, CLAUDE_MODEL,
                           GEMINI_CREDENTIALS, GEMINI_FLASH_MODEL, GEMINI_MODEL,
-                          MAX_INPUT_TOKENS, MIN_INPUT_TOKENS,
-                          MAX_CHARACTER_THRESHOLD)
+                          MAX_INPUT_TOKENS, MIN_INPUT_TOKENS,MAX_TOKEN_THRESHOLD
+                          )
 from utils.constants import APP_TYPE, MESSAGES, DEFAULT_DEPARTMENT, DEFAULT_DOCUMENT_TYPE, DOCUMENT_TYPES
 from utils.error_handlers import handle_error
 from utils.exceptions import APIError
@@ -257,7 +257,7 @@ def determine_final_model(department: str,
     original_model = selected_model
     model_switched = False
 
-    if selected_model == "Claude" and total_characters > MAX_CHARACTER_THRESHOLD:
+    if selected_model == "Claude" and total_characters > MAX_TOKEN_THRESHOLD:
         if GEMINI_CREDENTIALS and GEMINI_MODEL:
             selected_model = "Gemini_Pro"
             model_switched = True
