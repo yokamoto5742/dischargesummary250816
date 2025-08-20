@@ -24,6 +24,21 @@ def update_document_type():
     st.session_state.update_ui = True
 
 
+def update_department():
+    st.session_state.selected_dept_for_prompt = st.session_state.prompt_department_selector
+
+    available_doctors = DEPARTMENT_DOCTORS_MAPPING.get(st.session_state.selected_dept_for_prompt, ["default"])
+    if st.session_state.selected_doctor_for_prompt not in available_doctors:
+        st.session_state.selected_doctor_for_prompt = available_doctors[0]
+
+    st.session_state.update_ui = True
+
+
+def update_doctor():
+    st.session_state.selected_doctor_for_prompt = st.session_state.prompt_doctor_selector
+    st.session_state.update_ui = True
+
+
 @handle_error
 def prompt_management_ui():
     config = get_config()
@@ -67,8 +82,36 @@ def prompt_management_ui():
             on_change=update_document_type
         )
 
-    selected_dept = st.session_state.selected_dept_for_prompt
-    selected_doctor = st.session_state.selected_doctor_for_prompt
+    col3, col4 = st.columns(2)
+    with col3:
+        selected_dept = st.selectbox(
+            "診療科",
+            departments,
+            index=departments.index(
+                st.session_state.selected_dept_for_prompt) if st.session_state.selected_dept_for_prompt in departments else 0,
+            format_func=lambda x: "全科共通" if x == "default" else x,
+            key="prompt_department_selector",
+            on_change=update_department
+        )
+
+    available_doctors = DEPARTMENT_DOCTORS_MAPPING.get(selected_dept, ["default"])
+    if st.session_state.selected_doctor_for_prompt not in available_doctors:
+        st.session_state.selected_doctor_for_prompt = available_doctors[0]
+
+    with col4:
+        selected_doctor = st.selectbox(
+            "医師名",
+            available_doctors,
+            index=available_doctors.index(st.session_state.selected_doctor_for_prompt),
+            format_func=lambda x: "医師共通" if x == "default" else x,
+            key="prompt_doctor_selector",
+            on_change=update_doctor
+        )
+
+    st.session_state.selected_dept_for_prompt = selected_dept
+    st.session_state.selected_doc_type_for_prompt = selected_doc_type
+    st.session_state.selected_doctor_for_prompt = selected_doctor
+
     prompt_data = get_prompt(selected_dept, selected_doc_type, selected_doctor)
 
     available_models = []
@@ -99,33 +142,6 @@ def prompt_management_ui():
             on_change=lambda: st.session_state.document_model_mapping.update({selected_doc_type: prompt_model})
         )
 
-    col3, col4 = st.columns(2)
-    with col3:
-        selected_dept = st.selectbox(
-            "診療科",
-            departments,
-            index=departments.index(
-                st.session_state.selected_dept_for_prompt) if st.session_state.selected_dept_for_prompt in departments else 0,
-            format_func=lambda x: "全科共通" if x == "default" else x,
-            key="prompt_department_selector"
-        )
-
-    available_doctors = DEPARTMENT_DOCTORS_MAPPING.get(selected_dept, ["default"])
-    if st.session_state.selected_doctor_for_prompt not in available_doctors:
-        st.session_state.selected_doctor_for_prompt = available_doctors[0]
-
-    with col4:
-        selected_doctor = st.selectbox(
-            "医師名",
-            available_doctors,
-            index=available_doctors.index(st.session_state.selected_doctor_for_prompt),
-            format_func=lambda x: "医師共通" if x == "default" else x,
-            key="prompt_doctor_selector"
-        )
-
-    st.session_state.selected_dept_for_prompt = selected_dept
-    st.session_state.selected_doc_type_for_prompt = selected_doc_type
-    st.session_state.selected_doctor_for_prompt = selected_doctor
     st.session_state.document_model_mapping[selected_doc_type] = prompt_model
 
     with st.form(key=f"edit_prompt_form_{selected_dept}_{selected_doc_type}_{selected_doctor}"):
