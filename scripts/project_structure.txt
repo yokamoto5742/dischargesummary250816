@@ -1,0 +1,49 @@
+============================================================
+プロジェクト構造: MediDocsLMref
+パス: C:\Users\yokam\PycharmProjects\MediDocsLMref
+生成日時: 2025-08-16 18:28:18
+============================================================
+
+└── MediDocsLMref
+    ├── database
+    │   ├── __init__.py
+    │   ├── db.py
+    │   ├── models.py
+    │   └── schema.py
+    ├── docs
+    │   ├── LICENSE
+    │   └── README.md
+    ├── external_service
+    │   ├── __init__.py
+    │   ├── api_factory.py
+    │   ├── base_api.py
+    │   ├── claude_api.py
+    │   ├── gemini_api.py
+    │   └── openai_api.py
+    ├── scripts
+    │   └── project_structure.py
+    ├── services
+    │   ├── __init__.py
+    │   └── summary_service.py
+    ├── ui_components
+    │   ├── __init__.py
+    │   └── navigation.py
+    ├── utils
+    │   ├── __init__.py
+    │   ├── config.py
+    │   ├── constants.py
+    │   ├── error_handlers.py
+    │   ├── exceptions.py
+    │   ├── prompt_manager.py
+    │   └── text_processor.py
+    ├── views
+    │   ├── __init__.py
+    │   ├── main_page.py
+    │   ├── prompt_management_page.py
+    │   └── statistics_page.py
+    ├── config.ini
+    ├── Procfile
+    ├── requirements.txt
+    ├── app.py
+    ├── runtime.txt
+    └── setup.sh
