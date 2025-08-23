@@ -11,7 +11,7 @@ from database.db import DatabaseManager
 from external_service.api_factory import generate_summary
 from utils.config import (CLAUDE_API_KEY, CLAUDE_MODEL,
                           GEMINI_CREDENTIALS, GEMINI_FLASH_MODEL, GEMINI_MODEL,
-                          MAX_INPUT_TOKENS, MIN_INPUT_TOKENS,MAX_TOKEN_THRESHOLD
+                          MAX_INPUT_TOKENS, MIN_INPUT_TOKENS, MAX_TOKEN_THRESHOLD
                           )
 from utils.constants import APP_TYPE, MESSAGES, DEFAULT_DEPARTMENT, DEFAULT_DOCUMENT_TYPE, DOCUMENT_TYPES
 from utils.error_handlers import handle_error
@@ -31,49 +31,30 @@ def generate_summary_task(input_text: str,
                           selected_document_type: str = DEFAULT_DOCUMENT_TYPE,
                           selected_doctor: str = "default",
                           model_explicitly_selected: bool = False) -> None:
+    """サマリー生成のメインタスク"""
     try:
-        normalized_dept, normalized_doc_type = normalize_selection_params(
-            selected_department, selected_document_type
+        # パラメータ準備
+        generation_params = prepare_generation_parameters(
+            selected_department, selected_document_type, selected_doctor,
+            selected_model, model_explicitly_selected, input_text, additional_info
         )
 
-        final_model, model_switched, original_model = determine_final_model(
-            normalized_dept,
-            normalized_doc_type,
-            selected_doctor,
-            selected_model,
-            model_explicitly_selected,
-            input_text,
-            additional_info
+        # API実行
+        api_result = execute_api_generation(
+            generation_params['provider'], generation_params['model_name'],
+            input_text, additional_info, current_prescription,
+            generation_params['normalized_dept'], generation_params['normalized_doc_type'],
+            selected_doctor
         )
 
-        provider, model_name = get_provider_and_model(final_model)
-        validate_api_credentials_for_provider(provider)
-
-        output_summary, input_tokens, output_tokens = generate_summary(
-            provider=provider,
-            medical_text=input_text,
-            additional_info=additional_info,
-            current_prescription=current_prescription,
-            department=normalized_dept,
-            document_type=normalized_doc_type,
-            doctor=selected_doctor,
-            model_name=model_name
+        # 結果フォーマット
+        result = format_generation_result(
+            api_result['output_summary'], api_result['input_tokens'], api_result['output_tokens'],
+            generation_params['model_detail'], generation_params['model_switched'],
+            generation_params['original_model']
         )
 
-        model_detail = model_name if provider == "gemini" else final_model
-        output_summary = format_output_summary(output_summary)
-        parsed_summary = parse_output_summary(output_summary)
-
-        result_queue.put({
-            "success": True,
-            "output_summary": output_summary,
-            "parsed_summary": parsed_summary,
-            "input_tokens": input_tokens,
-            "output_tokens": output_tokens,
-            "model_detail": model_detail,
-            "model_switched": model_switched,
-            "original_model": original_model if model_switched else None
-        })
+        result_queue.put(result)
 
     except Exception as e:
         result_queue.put({
@@ -82,38 +63,130 @@ def generate_summary_task(input_text: str,
         })
 
 
+def prepare_generation_parameters(selected_department: str, selected_document_type: str,
+                                  selected_doctor: str, selected_model: str,
+                                  model_explicitly_selected: bool, input_text: str,
+                                  additional_info: str) -> Dict[str, Any]:
+    """生成処理のパラメータを準備"""
+    normalized_dept, normalized_doc_type = normalize_selection_params(
+        selected_department, selected_document_type
+    )
+
+    final_model, model_switched, original_model = determine_final_model(
+        normalized_dept, normalized_doc_type, selected_doctor,
+        selected_model, model_explicitly_selected, input_text, additional_info
+    )
+
+    provider, model_name = get_provider_and_model(final_model)
+    validate_api_credentials_for_provider(provider)
+
+    model_detail = model_name if provider == "gemini" else final_model
+
+    return {
+        'normalized_dept': normalized_dept,
+        'normalized_doc_type': normalized_doc_type,
+        'provider': provider,
+        'model_name': model_name,
+        'model_detail': model_detail,
+        'model_switched': model_switched,
+        'original_model': original_model
+    }
+
+
+def execute_api_generation(provider: str, model_name: str, input_text: str,
+                           additional_info: str, current_prescription: str,
+                           normalized_dept: str, normalized_doc_type: str,
+                           selected_doctor: str) -> Dict[str, Any]:
+    """API呼び出しを実行"""
+    output_summary, input_tokens, output_tokens = generate_summary(
+        provider=provider,
+        medical_text=input_text,
+        additional_info=additional_info,
+        current_prescription=current_prescription,
+        department=normalized_dept,
+        document_type=normalized_doc_type,
+        doctor=selected_doctor,
+        model_name=model_name
+    )
+
+    return {
+        'output_summary': output_summary,
+        'input_tokens': input_tokens,
+        'output_tokens': output_tokens
+    }
+
+
+def format_generation_result(output_summary: str, input_tokens: int, output_tokens: int,
+                             model_detail: str, model_switched: bool,
+                             original_model: str) -> Dict[str, Any]:
+    """生成結果をフォーマット"""
+    formatted_summary = format_output_summary(output_summary)
+    parsed_summary = parse_output_summary(formatted_summary)
+
+    return {
+        "success": True,
+        "output_summary": formatted_summary,
+        "parsed_summary": parsed_summary,
+        "input_tokens": input_tokens,
+        "output_tokens": output_tokens,
+        "model_detail": model_detail,
+        "model_switched": model_switched,
+        "original_model": original_model if model_switched else None
+    }
+
+
 @handle_error
 def process_summary(input_text: str,
                     additional_info: str = "",
                     current_prescription: str = "") -> None:
+    """サマリー処理のメイン関数"""
+    validate_inputs(input_text)
+    session_params = get_session_parameters()
+
+    result = execute_summary_generation(
+        input_text, additional_info, current_prescription, session_params
+    )
+
+    handle_generation_result(result, session_params)
+
+
+def validate_inputs(input_text: str) -> None:
+    """入力の検証"""
     validate_api_credentials()
     validate_input_text(input_text)
 
-    try:
-        session_params = get_session_parameters()
 
+def execute_summary_generation(input_text: str, additional_info: str,
+                               current_prescription: str,
+                               session_params: Dict[str, Any]) -> Dict[str, Any]:
+    """サマリー生成の実行"""
+    try:
         result = execute_summary_generation_with_ui(
-            input_text,
-            additional_info,
-            current_prescription,
-            session_params
+            input_text, additional_info, current_prescription, session_params
         )
 
-        if result["success"]:
-            handle_success_result(result, session_params)
-        else:
+        if not result["success"]:
             raise APIError(result['error'])
+
+        return result
 
     except Exception as e:
         raise APIError(f"作成中にエラーが発生しました: {str(e)}")
 
 
+def handle_generation_result(result: Dict[str, Any], session_params: Dict[str, Any]) -> None:
+    """生成結果の処理"""
+    handle_success_result(result, session_params)
+
+
 def validate_api_credentials() -> None:
+    """API認証情報の検証"""
     if not any([GEMINI_CREDENTIALS, CLAUDE_API_KEY]):
         raise APIError(MESSAGES["NO_API_CREDENTIALS"])
 
 
 def validate_input_text(input_text: str) -> None:
+    """入力テキストの検証"""
     if not input_text:
         st.warning(MESSAGES["NO_INPUT"])
         return
@@ -129,6 +202,7 @@ def validate_input_text(input_text: str) -> None:
 
 
 def get_session_parameters() -> Dict[str, Any]:
+    """セッションパラメータの取得"""
     return {
         "available_models": getattr(st.session_state, "available_models", []),
         "selected_model": getattr(st.session_state, "selected_model", None),
@@ -143,6 +217,7 @@ def execute_summary_generation_with_ui(input_text: str,
                                        additional_info: str,
                                        current_prescription: str,
                                        session_params: Dict[str, Any]) -> Dict[str, Any]:
+    """UI付きでサマリー生成を実行"""
     start_time = datetime.datetime.now()
     status_placeholder = st.empty()
     result_queue = queue.Queue()
@@ -180,6 +255,7 @@ def execute_summary_generation_with_ui(input_text: str,
 def display_progress_with_timer(thread: threading.Thread,
                                 placeholder: st.empty,
                                 start_time: datetime.datetime) -> None:
+    """進捗表示とタイマー"""
     elapsed_time = 0
     with st.spinner("作成中..."):
         placeholder.text(f"⏱️ 経過時間: {elapsed_time}秒")
@@ -191,6 +267,7 @@ def display_progress_with_timer(thread: threading.Thread,
 
 def handle_success_result(result: Dict[str, Any],
                           session_params: Dict[str, Any]) -> None:
+    """成功結果の処理"""
     st.session_state.output_summary = result["output_summary"]
     st.session_state.parsed_summary = result["parsed_summary"]
 
@@ -202,6 +279,7 @@ def handle_success_result(result: Dict[str, Any],
 
 def save_usage_to_database(result: Dict[str, Any],
                            session_params: Dict[str, Any]) -> None:
+    """データベースに使用状況を保存"""
     try:
         db_manager = DatabaseManager.get_instance()
         now_jst = datetime.datetime.now().astimezone(JST)
@@ -235,6 +313,7 @@ def save_usage_to_database(result: Dict[str, Any],
 
 def normalize_selection_params(department: str,
                                document_type: str) -> Tuple[str, str]:
+    """選択パラメータの正規化"""
     normalized_dept = department if department in DEFAULT_DEPARTMENT else "default"
     normalized_doc_type = document_type if document_type in DOCUMENT_TYPES else DOCUMENT_TYPES[0]
     return normalized_dept, normalized_doc_type
@@ -247,12 +326,33 @@ def determine_final_model(department: str,
                           model_explicitly_selected: bool,
                           input_text: str,
                           additional_info: str) -> Tuple[str, bool, str]:
+    """最終的なモデルを決定（モデル切り替えロジック含む）"""
+    # プロンプトからのモデル選択を確認
+    final_model = get_model_from_prompt_if_needed(
+        department, document_type, doctor, selected_model, model_explicitly_selected
+    )
+
+    # トークン制限によるモデル切り替えを確認
+    return check_model_switching_for_token_limit(
+        final_model, input_text, additional_info
+    )
+
+
+def get_model_from_prompt_if_needed(department: str, document_type: str, doctor: str,
+                                    selected_model: str, model_explicitly_selected: bool) -> str:
+    """必要に応じてプロンプトからモデルを取得"""
+    if model_explicitly_selected:
+        return selected_model
+
     prompt_data = get_prompt(department, document_type, doctor)
     prompt_selected_model = prompt_data.get("selected_model") if prompt_data else None
 
-    if prompt_selected_model and not model_explicitly_selected:
-        selected_model = prompt_selected_model
+    return prompt_selected_model or selected_model
 
+
+def check_model_switching_for_token_limit(selected_model: str, input_text: str,
+                                          additional_info: str) -> Tuple[str, bool, str]:
+    """トークン制限によるモデル切り替えをチェック"""
     total_characters = len(input_text) + len(additional_info or "")
     original_model = selected_model
     model_switched = False
@@ -268,6 +368,7 @@ def determine_final_model(department: str,
 
 
 def get_provider_and_model(selected_model: str) -> Tuple[str, str]:
+    """プロバイダーとモデル名を取得"""
     provider_mapping = {
         "Claude": ("claude", CLAUDE_MODEL),
         "Gemini_Pro": ("gemini", GEMINI_MODEL),
@@ -281,6 +382,7 @@ def get_provider_and_model(selected_model: str) -> Tuple[str, str]:
 
 
 def validate_api_credentials_for_provider(provider: str) -> None:
+    """プロバイダー固有のAPI認証情報を検証"""
     credentials_check = {
         "claude": CLAUDE_API_KEY,
         "gemini": GEMINI_CREDENTIALS,
