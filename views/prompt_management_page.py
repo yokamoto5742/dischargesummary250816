@@ -1,190 +1,283 @@
 import streamlit as st
 
-from utils.constants import DEPARTMENT_DOCTORS_MAPPING, DOCUMENT_TYPES, DEFAULT_DOCUMENT_TYPE
+from utils.constants import DEPARTMENT_DOCTORS_MAPPING, DOCUMENT_TYPES, DEFAULT_DOCUMENT_TYPE, UIConstants
 from utils.error_handlers import handle_error
 from utils.exceptions import AppError
 from utils.prompt_manager import get_all_departments, get_prompt, create_or_update_prompt, delete_prompt
 from utils.config import get_config
 from ui_components.navigation import change_page
+from ui_components.common import UIComponents, FormComponents, NavigationComponents, SessionManager
 
 
-def update_document_type():
-    st.session_state.selected_doc_type_for_prompt = st.session_state.prompt_document_type_selector
+def _initialize_session_defaults() -> None:
+    """セッション状態のデフォルト値を初期化"""
+    defaults = {
+        "selected_dept_for_prompt": "default",
+        "selected_doc_type_for_prompt": DEFAULT_DOCUMENT_TYPE,
+        "selected_doctor_for_prompt": "default",
+        "document_model_mapping": {}
+    }
+    SessionManager.initialize_session_state(defaults)
 
+
+def _update_document_model_mapping(selected_doc_type: str) -> None:
+    """文書タイプ変更時のモデルマッピング更新"""
     prompt_data = get_prompt(
         st.session_state.selected_dept_for_prompt,
-        st.session_state.selected_doc_type_for_prompt,
+        selected_doc_type,
         st.session_state.selected_doctor_for_prompt
     )
 
     if prompt_data and prompt_data.get("selected_model"):
-        st.session_state.document_model_mapping[st.session_state.selected_doc_type_for_prompt] = prompt_data.get(
-            "selected_model")
+        st.session_state.document_model_mapping[selected_doc_type] = prompt_data.get("selected_model")
 
     st.session_state.update_ui = True
 
 
-def update_department():
+def _handle_department_change() -> None:
+    """部門変更の処理"""
     st.session_state.selected_dept_for_prompt = st.session_state.prompt_department_selector
-
-    available_doctors = DEPARTMENT_DOCTORS_MAPPING.get(st.session_state.selected_dept_for_prompt, ["default"])
+    
+    available_doctors = DEPARTMENT_DOCTORS_MAPPING.get(
+        st.session_state.selected_dept_for_prompt, ["default"]
+    )
     if st.session_state.selected_doctor_for_prompt not in available_doctors:
         st.session_state.selected_doctor_for_prompt = available_doctors[0]
 
     st.session_state.update_ui = True
 
 
-def update_doctor():
+def _handle_document_type_change() -> None:
+    """文書タイプ変更の処理"""
+    new_doc_type = st.session_state.prompt_document_type_selector
+    st.session_state.selected_doc_type_for_prompt = new_doc_type
+    _update_document_model_mapping(new_doc_type)
+
+
+def _handle_doctor_change() -> None:
+    """医師変更の処理"""
     st.session_state.selected_doctor_for_prompt = st.session_state.prompt_doctor_selector
     st.session_state.update_ui = True
 
 
-@handle_error
-def prompt_management_ui():
-    config = get_config()
-    default_prompt_content = config['PROMPTS']['summary']
-
-    if st.session_state.success_message:
-        st.success(st.session_state.success_message)
-        st.session_state.success_message = None
-
-    if st.button("作成画面に戻る", key="back_to_main"):
-        change_page("main")
-        st.rerun()
-
-    if "selected_dept_for_prompt" not in st.session_state:
-        st.session_state.selected_dept_for_prompt = "default"
-
-    if "selected_doc_type_for_prompt" not in st.session_state:
-        st.session_state.selected_doc_type_for_prompt = DEFAULT_DOCUMENT_TYPE
-
-    if "selected_doctor_for_prompt" not in st.session_state:
-        st.session_state.selected_doctor_for_prompt = "default"
-
+def _get_available_options() -> tuple:
+    """利用可能なオプションを取得"""
     departments = ["default"] + get_all_departments()
-    document_types = DOCUMENT_TYPES
-    if not document_types:
-        document_types = [DEFAULT_DOCUMENT_TYPE]
+    document_types = DOCUMENT_TYPES if DOCUMENT_TYPES else [DEFAULT_DOCUMENT_TYPE]
+    return departments, document_types
 
-    if "document_model_mapping" not in st.session_state:
-        st.session_state.document_model_mapping = {}
 
-    col1, col2 = st.columns(2)
-
+def _create_selection_controls() -> tuple:
+    """選択制御UIを作成"""
+    departments, document_types = _get_available_options()
+    
+    col1, col2 = st.columns(UIConstants.COLUMNS_TWO)
+    
     with col1:
-        previous_doc_type = st.session_state.selected_doc_type_for_prompt
-        selected_doc_type = st.selectbox(
+        selected_doc_type = UIComponents.create_selectbox_with_mapping(
             "文書名",
             document_types,
-            index=document_types.index(
-                st.session_state.selected_doc_type_for_prompt) if st.session_state.selected_doc_type_for_prompt in document_types else 0,
+            st.session_state.selected_doc_type_for_prompt,
             key="prompt_document_type_selector",
-            on_change=update_document_type
+            on_change=_handle_document_type_change
         )
-
-    col3, col4 = st.columns(2)
+    
+    col3, col4 = st.columns(UIConstants.COLUMNS_TWO)
+    
     with col3:
-        selected_dept = st.selectbox(
+        selected_dept = UIComponents.create_selectbox_with_mapping(
             "診療科",
             departments,
-            index=departments.index(
-                st.session_state.selected_dept_for_prompt) if st.session_state.selected_dept_for_prompt in departments else 0,
-            format_func=lambda x: "全科共通" if x == "default" else x,
+            st.session_state.selected_dept_for_prompt,
+            mapping_func=lambda x: "全科共通" if x == "default" else x,
             key="prompt_department_selector",
-            on_change=update_department
+            on_change=_handle_department_change
         )
-
+    
     available_doctors = DEPARTMENT_DOCTORS_MAPPING.get(selected_dept, ["default"])
     if st.session_state.selected_doctor_for_prompt not in available_doctors:
         st.session_state.selected_doctor_for_prompt = available_doctors[0]
-
+    
     with col4:
-        selected_doctor = st.selectbox(
+        selected_doctor = UIComponents.create_selectbox_with_mapping(
             "医師名",
             available_doctors,
-            index=available_doctors.index(st.session_state.selected_doctor_for_prompt),
-            format_func=lambda x: "医師共通" if x == "default" else x,
+            st.session_state.selected_doctor_for_prompt,
+            mapping_func=lambda x: "医師共通" if x == "default" else x,
             key="prompt_doctor_selector",
-            on_change=update_doctor
+            on_change=_handle_doctor_change
         )
+    
+    # セッション状態の更新
+    SessionManager.update_session_state({
+        "selected_dept_for_prompt": selected_dept,
+        "selected_doc_type_for_prompt": selected_doc_type,
+        "selected_doctor_for_prompt": selected_doctor
+    })
+    
+    return selected_dept, selected_doc_type, selected_doctor
 
-    st.session_state.selected_dept_for_prompt = selected_dept
-    st.session_state.selected_doc_type_for_prompt = selected_doc_type
-    st.session_state.selected_doctor_for_prompt = selected_doctor
 
-    prompt_data = get_prompt(selected_dept, selected_doc_type, selected_doctor)
-
-    available_models = []
-    if "available_models" in st.session_state:
-        available_models = st.session_state.available_models
-
-    model_options = available_models
-
+def _create_model_selector(selected_doc_type: str) -> str:
+    """AIモデル選択UIを作成"""
+    available_models = getattr(st.session_state, "available_models", [])
+    
+    # 現在選択されているモデルを決定
+    prompt_data = get_prompt(
+        st.session_state.selected_dept_for_prompt,
+        selected_doc_type,
+        st.session_state.selected_doctor_for_prompt
+    )
+    
     if prompt_data and prompt_data.get("selected_model"):
         selected_model = prompt_data.get("selected_model")
     elif selected_doc_type in st.session_state.document_model_mapping:
         selected_model = st.session_state.document_model_mapping[selected_doc_type]
     else:
-        selected_model = model_options[0] if model_options else None
-
+        selected_model = available_models[0] if available_models else None
+    
     st.session_state.document_model_mapping[selected_doc_type] = selected_model
-
+    
     model_index = 0
-    if selected_model in model_options:
-        model_index = model_options.index(selected_model)
-
+    if selected_model in available_models:
+        model_index = available_models.index(selected_model)
+    
+    col2 = st.columns(UIConstants.COLUMNS_TWO)[1]
     with col2:
         prompt_model = st.selectbox(
             "AIモデル",
-            model_options,
+            available_models,
             index=model_index,
             key=f"prompt_model_{selected_doc_type}",
-            on_change=lambda: st.session_state.document_model_mapping.update({selected_doc_type: prompt_model})
+            on_change=lambda: st.session_state.document_model_mapping.update({
+                selected_doc_type: st.session_state[f"prompt_model_{selected_doc_type}"]
+            })
         )
-
+    
     st.session_state.document_model_mapping[selected_doc_type] = prompt_model
+    return prompt_model
 
-    with st.form(key=f"edit_prompt_form_{selected_dept}_{selected_doc_type}_{selected_doctor}"):
-        if prompt_data:
-            content_value = prompt_data.get("content", "")
-        else:
-            content_value = default_prompt_content.replace('\\n', '\n')
 
-        prompt_content = st.text_area(
+def _create_prompt_form(selected_dept: str, selected_doc_type: str, 
+                       selected_doctor: str, prompt_model: str) -> None:
+    """プロンプト編集フォームを作成"""
+    config = get_config()
+    default_prompt_content = config['PROMPTS']['summary']
+    
+    form_key = f"edit_prompt_form_{selected_dept}_{selected_doc_type}_{selected_doctor}"
+    
+    with st.form(key=form_key):
+        # プロンプト内容の取得
+        prompt_data = get_prompt(selected_dept, selected_doc_type, selected_doctor)
+        content_value = prompt_data.get("content", "") if prompt_data else default_prompt_content.replace('\\n', '\n')
+        
+        # プロンプト編集エリア
+        prompt_content = UIComponents.create_text_area(
             "プロンプト内容",
+            height=UIConstants.TEXT_AREA_HEIGHT_LARGE,
             value=content_value,
-            height=200,
             key=f"prompt_content_{selected_dept}_{selected_doc_type}_{selected_doctor}"
         )
-
+        
+        # 送信ボタン
         submit = st.form_submit_button("保存")
-
+        
         if submit:
-            if prompt_model:
-                st.session_state.document_model_mapping[selected_doc_type] = prompt_model
-
-            success, message = create_or_update_prompt(
-                selected_dept,
-                selected_doc_type,
-                selected_doctor,
+            _handle_prompt_save(
+                selected_dept, selected_doc_type, selected_doctor,
                 prompt_content, prompt_model
             )
 
-            if success:
-                st.session_state.success_message = message
-                st.rerun()
-            else:
-                raise AppError(message)
 
-    if selected_dept != "default" or selected_doc_type != DEFAULT_DOCUMENT_TYPE or selected_doctor != "default":
-        if st.button("プロンプトを削除", key=f"delete_prompt_{selected_dept}_{selected_doc_type}_{selected_doctor}",
-                     type="primary"):
-            success, message = delete_prompt(selected_dept, selected_doc_type, selected_doctor)
-            if success:
-                st.session_state.success_message = message
-                st.session_state.selected_dept_for_prompt = "default"
-                st.session_state.selected_doc_type_for_prompt = DEFAULT_DOCUMENT_TYPE
-                st.session_state.selected_doctor_for_prompt = "default"
-                st.rerun()
-            else:
-                raise AppError(message)
+def _handle_prompt_save(dept: str, doc_type: str, doctor: str, 
+                       content: str, model: str) -> None:
+    """プロンプト保存の処理"""
+    if model:
+        st.session_state.document_model_mapping[doc_type] = model
+
+    success, message = create_or_update_prompt(dept, doc_type, doctor, content, model)
+
+    if success:
+        st.session_state.success_message = message
+        st.rerun()
+    else:
+        raise AppError(message)
+
+
+def _create_delete_button(selected_dept: str, selected_doc_type: str, 
+                         selected_doctor: str) -> None:
+    """削除ボタンを作成"""
+    if (selected_dept != "default" or 
+        selected_doc_type != DEFAULT_DOCUMENT_TYPE or 
+        selected_doctor != "default"):
+        
+        delete_key = f"delete_prompt_{selected_dept}_{selected_doc_type}_{selected_doctor}"
+        
+        if st.button("プロンプトを削除", key=delete_key, type="primary"):
+            _handle_prompt_delete(selected_dept, selected_doc_type, selected_doctor)
+
+
+def _handle_prompt_delete(dept: str, doc_type: str, doctor: str) -> None:
+    """プロンプト削除の処理"""
+    success, message = delete_prompt(dept, doc_type, doctor)
+    
+    if success:
+        st.session_state.success_message = message
+        # デフォルト値にリセット
+        SessionManager.update_session_state({
+            "selected_dept_for_prompt": "default",
+            "selected_doc_type_for_prompt": DEFAULT_DOCUMENT_TYPE,
+            "selected_doctor_for_prompt": "default"
+        })
+        st.rerun()
+    else:
+        raise AppError(message)
+
+
+def _display_success_message() -> None:
+    """成功メッセージの表示"""
+    if st.session_state.success_message:
+        UIComponents.show_success_message(st.session_state.success_message)
+        st.session_state.success_message = None
+
+
+@handle_error
+def prompt_management_ui() -> None:
+    """プロンプト管理UIのメイン関数"""
+    # セッション状態の初期化
+    _initialize_session_defaults()
+    
+    # 成功メッセージの表示
+    _display_success_message()
+    
+    # 戻るボタン
+    NavigationComponents.create_back_button(
+        "main",
+        callback=lambda: change_page("main")
+    )
+    
+    # 選択制御UIの作成
+    selected_dept, selected_doc_type, selected_doctor = _create_selection_controls()
+    
+    # AIモデル選択UIの作成
+    prompt_model = _create_model_selector(selected_doc_type)
+    
+    # プロンプト編集フォームの作成
+    _create_prompt_form(selected_dept, selected_doc_type, selected_doctor, prompt_model)
+    
+    # 削除ボタンの作成
+    _create_delete_button(selected_dept, selected_doc_type, selected_doctor)
+
+
+# 後方互換性のための関数（非推奨）
+def update_document_type():
+    """非推奨: _handle_document_type_changeを使用してください"""
+    _handle_document_type_change()
+
+def update_department():
+    """非推奨: _handle_department_changeを使用してください"""
+    _handle_department_change()
+
+def update_doctor():
+    """非推奨: _handle_doctor_changeを使用してください"""
+    _handle_doctor_change()

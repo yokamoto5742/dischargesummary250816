@@ -3,7 +3,7 @@ from typing import Tuple
 
 from external_service.base_api import BaseAPIClient
 from utils.config import CLAUDE_API_KEY, CLAUDE_MODEL
-from utils.constants import MESSAGES
+from utils.constants import MESSAGES, SystemConstants
 from utils.exceptions import APIError
 
 
@@ -25,7 +25,7 @@ class ClaudeAPIClient(BaseAPIClient):
     def _generate_content(self, prompt: str, model_name: str) -> Tuple[str, int, int]:
         response = self.client.messages.create(
             model=model_name,
-            max_tokens=6000, # 最大出力トークン数
+            max_tokens=SystemConstants.CLAUDE_MAX_TOKENS,
             messages=[
                 {"role": "user", "content": prompt}
             ]
