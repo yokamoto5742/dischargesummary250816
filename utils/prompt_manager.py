@@ -155,9 +155,3 @@ def get_prompt_manager() -> PromptManager:
     if _prompt_manager is None:
         _prompt_manager = PromptManager()
     return _prompt_manager
-
-
-# 後方互換性のための関数（既存のコードが動作するように）
-def get_prompt(department="default", document_type=DEFAULT_DOCUMENT_TYPE, doctor="default"):
-    """プロンプトの取得"""
-    return get_prompt_manager().get_prompt(department, document_type, doctor)
