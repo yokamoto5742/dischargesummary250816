@@ -1,4 +1,5 @@
 import os
+from typing import Dict, List, Any
 
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
@@ -10,6 +11,55 @@ from utils.config import (
     DB_POOL_SIZE, DB_MAX_OVERFLOW, DB_POOL_TIMEOUT, DB_POOL_RECYCLE
 )
 from utils.exceptions import DatabaseError
+
+
+class QueryBuilder:
+
+    @staticmethod
+    def build_select_query(table: str,
+                           columns: List[str] = None,
+                           where_conditions: List[str] = None,
+                           group_by: List[str] = None,
+                           order_by: List[str] = None) -> str:
+        columns_str = ", ".join(columns) if columns else "*"
+        query = f"SELECT {columns_str} FROM {table}"
+
+        if where_conditions:
+            query += f" WHERE {' AND '.join(where_conditions)}"
+
+        if group_by:
+            query += f" GROUP BY {', '.join(group_by)}"
+
+        if order_by:
+            query += f" ORDER BY {', '.join(order_by)}"
+
+        return query
+
+    @staticmethod
+    def build_upsert_query(table: str,
+                           columns: List[str],
+                           conflict_columns: List[str],
+                           update_columns: List[str] = None) -> str:
+        placeholders = [f":{col}" for col in columns]
+
+        query = f"""
+        INSERT INTO {table} ({', '.join(columns)})
+        VALUES ({', '.join(placeholders)})
+        ON CONFLICT ({', '.join(conflict_columns)})
+        DO UPDATE SET
+        """
+
+        if update_columns:
+            updates = [f"{col} = EXCLUDED.{col}" for col in update_columns]
+        else:
+            updates = [f"{col} = EXCLUDED.{col}" for col in columns if col not in conflict_columns]
+
+        query += ", ".join(updates)
+        return query
+
+    @staticmethod
+    def build_delete_query(table: str, where_conditions: List[str]) -> str:
+        return f"DELETE FROM {table} WHERE {' AND '.join(where_conditions)}"
 
 
 class DatabaseManager:
@@ -101,12 +151,80 @@ class DatabaseManager:
         finally:
             session.close()
 
+    def select_with_conditions(self, table: str,
+                               conditions: Dict[str, Any] = None,
+                               columns: List[str] = None,
+                               order_by: List[str] = None) -> List[Dict[str, Any]]:
+        where_conditions = []
+        params = {}
+
+        if conditions:
+            for key, value in conditions.items():
+                if value is not None:
+                    where_conditions.append(f"{key} = :{key}")
+                    params[key] = value
+                else:
+                    where_conditions.append(f"{key} IS NULL")
+
+        query = QueryBuilder.build_select_query(
+            table=table,
+            columns=columns,
+            where_conditions=where_conditions,
+            order_by=order_by
+        )
+
+        return self.execute_query(query, params)
+
+    def upsert_record(self, table: str,
+                      data: Dict[str, Any],
+                      conflict_columns: List[str]) -> bool:
+        columns = list(data.keys())
+        query = QueryBuilder.build_upsert_query(
+            table=table,
+            columns=columns,
+            conflict_columns=conflict_columns
+        )
+
+        try:
+            self.execute_query(query, data, fetch=False)
+            return True
+        except Exception as e:
+            raise DatabaseError(f"レコードの作成/更新に失敗しました: {str(e)}")
+
+    def delete_with_conditions(self, table: str,
+                               conditions: Dict[str, Any]) -> int:
+        where_conditions = []
+        params = {}
+
+        for key, value in conditions.items():
+            if value is not None:
+                where_conditions.append(f"{key} = :{key}")
+                params[key] = value
+            else:
+                where_conditions.append(f"{key} IS NULL")
+
+        query = QueryBuilder.build_delete_query(
+            table=table,
+            where_conditions=where_conditions
+        )
+
+        session = self.get_session()
+        try:
+            result = session.execute(text(query), params)
+            deleted_count = result.rowcount
+            session.commit()
+            return deleted_count
+        except Exception as e:
+            session.rollback()
+            raise DatabaseError(f"レコードの削除に失敗しました: {str(e)}")
+        finally:
+            session.close()
+
 
 def get_usage_collection():
     try:
         db_manager = DatabaseManager.get_instance()
-        query = "SELECT * FROM summary_usage"
-        return db_manager.execute_query(query)
+        return db_manager.select_with_conditions("summary_usage")
     except Exception as e:
         raise DatabaseError(f"使用状況の取得に失敗しました: {str(e)}")
 
@@ -114,11 +232,7 @@ def get_usage_collection():
 def get_settings_collection(app_type=None):
     try:
         db_manager = DatabaseManager.get_instance()
-        if app_type:
-            query = "SELECT * FROM app_settings WHERE app_type = :app_type"
-            return db_manager.execute_query(query, {"app_type": app_type})
-        else:
-            query = "SELECT * FROM app_settings"
-            return db_manager.execute_query(query)
+        conditions = {"app_type": app_type} if app_type else None
+        return db_manager.select_with_conditions("app_settings", conditions)
     except Exception as e:
         raise DatabaseError(f"設定の取得に失敗しました: {str(e)}")
