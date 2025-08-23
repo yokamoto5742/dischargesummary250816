@@ -9,7 +9,6 @@ from ui_components.navigation import change_page
 
 
 def update_document_type():
-    """文書タイプ変更時の処理"""
     st.session_state.selected_doc_type_for_prompt = st.session_state.prompt_document_type_selector
 
     prompt_data = get_prompt(
@@ -26,7 +25,6 @@ def update_document_type():
 
 
 def update_department():
-    """診療科変更時の処理"""
     st.session_state.selected_dept_for_prompt = st.session_state.prompt_department_selector
 
     available_doctors = DEPARTMENT_DOCTORS_MAPPING.get(st.session_state.selected_dept_for_prompt, ["default"])
@@ -37,13 +35,11 @@ def update_department():
 
 
 def update_doctor():
-    """医師変更時の処理"""
     st.session_state.selected_doctor_for_prompt = st.session_state.prompt_doctor_selector
     st.session_state.update_ui = True
 
 
 def initialize_session_state():
-    """セッション状態の初期化"""
     if "selected_dept_for_prompt" not in st.session_state:
         st.session_state.selected_dept_for_prompt = "default"
 
@@ -58,7 +54,6 @@ def initialize_session_state():
 
 
 def render_navigation():
-    """ナビゲーション部分の描画"""
     if st.session_state.success_message:
         st.success(st.session_state.success_message)
         st.session_state.success_message = None
@@ -69,7 +64,6 @@ def render_navigation():
 
 
 def get_selection_options():
-    """選択肢のデータを取得"""
     departments = ["default"] + get_all_departments()
     document_types = DOCUMENT_TYPES if DOCUMENT_TYPES else [DEFAULT_DOCUMENT_TYPE]
     available_models = getattr(st.session_state, "available_models", [])
@@ -78,7 +72,6 @@ def get_selection_options():
 
 
 def render_document_type_selector(document_types):
-    """文書タイプセレクターの描画"""
     return st.selectbox(
         "文書名",
         document_types,
@@ -91,7 +84,6 @@ def render_document_type_selector(document_types):
 
 
 def render_department_selector(departments):
-    """診療科セレクターの描画"""
     return st.selectbox(
         "診療科",
         departments,
@@ -105,7 +97,6 @@ def render_department_selector(departments):
 
 
 def render_doctor_selector(selected_dept):
-    """医師セレクターの描画"""
     available_doctors = DEPARTMENT_DOCTORS_MAPPING.get(selected_dept, ["default"])
     if st.session_state.selected_doctor_for_prompt not in available_doctors:
         st.session_state.selected_doctor_for_prompt = available_doctors[0]
@@ -121,7 +112,6 @@ def render_doctor_selector(selected_dept):
 
 
 def get_selected_model(prompt_data, selected_doc_type, available_models):
-    """選択されたモデルを決定"""
     if prompt_data and prompt_data.get("selected_model"):
         return prompt_data.get("selected_model")
     elif selected_doc_type in st.session_state.document_model_mapping:
@@ -131,7 +121,6 @@ def get_selected_model(prompt_data, selected_doc_type, available_models):
 
 
 def render_model_selector(available_models, selected_model, selected_doc_type):
-    """AIモデルセレクターの描画"""
     model_index = 0
     if selected_model in available_models:
         model_index = available_models.index(selected_model)
@@ -150,7 +139,6 @@ def render_model_selector(available_models, selected_model, selected_doc_type):
 
 
 def render_selectors():
-    """セレクター群の描画"""
     departments, document_types, available_models = get_selection_options()
 
     col1, col2 = st.columns(2)
@@ -164,12 +152,10 @@ def render_selectors():
     with col4:
         selected_doctor = render_doctor_selector(selected_dept)
 
-    # セッション状態を更新
     st.session_state.selected_dept_for_prompt = selected_dept
     st.session_state.selected_doc_type_for_prompt = selected_doc_type
     st.session_state.selected_doctor_for_prompt = selected_doctor
 
-    # プロンプトデータを取得してモデルを決定
     prompt_data = get_prompt(selected_dept, selected_doc_type, selected_doctor)
     selected_model = get_selected_model(prompt_data, selected_doc_type, available_models)
     st.session_state.document_model_mapping[selected_doc_type] = selected_model
@@ -183,7 +169,6 @@ def render_selectors():
 
 
 def get_prompt_content(prompt_data):
-    """プロンプト内容を取得"""
     if prompt_data:
         return prompt_data.get("content", "")
     else:
@@ -193,7 +178,6 @@ def get_prompt_content(prompt_data):
 
 def handle_prompt_save(selected_dept, selected_doc_type, selected_doctor,
                        prompt_content, prompt_model):
-    """プロンプト保存処理"""
     if prompt_model:
         st.session_state.document_model_mapping[selected_doc_type] = prompt_model
 
@@ -214,7 +198,6 @@ def handle_prompt_save(selected_dept, selected_doc_type, selected_doctor,
 
 def render_prompt_form(selected_dept, selected_doc_type, selected_doctor,
                        prompt_data, prompt_model):
-    """プロンプト編集フォームの描画"""
     with st.form(key=f"edit_prompt_form_{selected_dept}_{selected_doc_type}_{selected_doctor}"):
         content_value = get_prompt_content(prompt_data)
 
@@ -235,7 +218,6 @@ def render_prompt_form(selected_dept, selected_doc_type, selected_doctor,
 
 
 def handle_prompt_deletion(selected_dept, selected_doc_type, selected_doctor):
-    """プロンプト削除処理"""
     success, message = delete_prompt(selected_dept, selected_doc_type, selected_doctor)
     if success:
         st.session_state.success_message = message
@@ -248,8 +230,6 @@ def handle_prompt_deletion(selected_dept, selected_doc_type, selected_doctor):
 
 
 def render_delete_button(selected_dept, selected_doc_type, selected_doctor):
-    """削除ボタンの描画"""
-    # デフォルトプロンプトは削除不可
     if (selected_dept != "default" or
             selected_doc_type != DEFAULT_DOCUMENT_TYPE or
             selected_doctor != "default"):
@@ -264,7 +244,6 @@ def render_delete_button(selected_dept, selected_doc_type, selected_doctor):
 
 @handle_error
 def prompt_management_ui():
-    """プロンプト管理UI のメイン関数"""
     initialize_session_state()
     render_navigation()
 
