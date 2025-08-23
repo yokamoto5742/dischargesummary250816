@@ -7,7 +7,8 @@ from typing import Dict, Any, Tuple
 import pytz
 import streamlit as st
 
-from database.db import DatabaseManager
+from database.db import get_usage_statistics_repository
+from database.repositories import UsageStatisticsRepository
 from external_service.api_factory import generate_summary
 from utils.config import (CLAUDE_API_KEY, CLAUDE_MODEL,
                           GEMINI_CREDENTIALS, GEMINI_FLASH_MODEL, GEMINI_MODEL,
@@ -16,7 +17,7 @@ from utils.config import (CLAUDE_API_KEY, CLAUDE_MODEL,
 from utils.constants import APP_TYPE, MESSAGES, DEFAULT_DEPARTMENT, DEFAULT_DOCUMENT_TYPE, DOCUMENT_TYPES
 from utils.error_handlers import handle_error
 from utils.exceptions import APIError
-from utils.prompt_manager import get_prompt_manager
+from utils.prompt_manager import get_prompt
 from utils.text_processor import format_output_summary, parse_output_summary
 
 JST = pytz.timezone('Asia/Tokyo')
@@ -264,8 +265,9 @@ def handle_success_result(result: Dict[str, Any],
 
 def save_usage_to_database(result: Dict[str, Any],
                            session_params: Dict[str, Any]) -> None:
+    """使用統計をデータベースに保存（リポジトリパターン使用）"""
     try:
-        db_manager = DatabaseManager.get_instance()
+        usage_repo: UsageStatisticsRepository = get_usage_statistics_repository()
         now_jst = datetime.datetime.now().astimezone(JST)
 
         usage_data = {
@@ -281,15 +283,7 @@ def save_usage_to_database(result: Dict[str, Any],
             "processing_time": round(result["processing_time"])
         }
 
-        query = """
-                INSERT INTO summary_usage
-                (date, app_type, document_types, model_detail, department, doctor,
-                 input_tokens, output_tokens, total_tokens, processing_time)
-                VALUES (:date, :app_type, :document_types, :model_detail, :department, :doctor,
-                        :input_tokens, :output_tokens, :total_tokens, :processing_time)
-                """
-
-        db_manager.execute_query(query, usage_data, fetch=False)
+        usage_repo.save_usage(usage_data)
 
     except Exception as db_error:
         st.warning(f"データベース保存中にエラーが発生しました: {str(db_error)}")
@@ -323,8 +317,7 @@ def get_model_from_prompt_if_needed(department: str, document_type: str, doctor:
     if model_explicitly_selected:
         return selected_model
 
-    prompt_manager = get_prompt_manager()
-    prompt_data = prompt_manager.get_prompt(department, document_type, doctor)
+    prompt_data = get_prompt(department, document_type, doctor)
     prompt_selected_model = prompt_data.get("selected_model") if prompt_data else None
 
     return prompt_selected_model or selected_model

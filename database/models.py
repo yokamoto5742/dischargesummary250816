@@ -1,5 +1,6 @@
-from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, UniqueConstraint
+from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, UniqueConstraint, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
 Base = declarative_base()
@@ -35,6 +36,20 @@ class Prompt(Base):
     created_at = Column(DateTime(timezone=True), default=func.now())
     updated_at = Column(DateTime(timezone=True), default=func.now(), onupdate=func.now())
 
+    # リレーションシップ（使用統計との関連）
+    usage_stats = relationship(
+        "SummaryUsage",
+        primaryjoin="and_(Prompt.department==SummaryUsage.department, "
+                   "Prompt.document_type==SummaryUsage.document_types, "
+                   "Prompt.doctor==SummaryUsage.doctor)",
+        foreign_keys="[SummaryUsage.department, SummaryUsage.document_types, SummaryUsage.doctor]",
+        viewonly=True
+    )
+
+    __table_args__ = (
+        UniqueConstraint('department', 'document_type', 'doctor', name='unique_prompt'),
+    )
+
 
 class SummaryUsage(Base):
     __tablename__ = 'summary_usage'
@@ -50,3 +65,16 @@ class SummaryUsage(Base):
     output_tokens = Column(Integer)
     total_tokens = Column(Integer)
     processing_time = Column(Integer)
+
+    @property
+    def related_prompt(self):
+        """関連するプロンプトを取得するプロパティ"""
+        from sqlalchemy.orm import object_session
+        session = object_session(self)
+        if session:
+            return session.query(Prompt).filter(
+                Prompt.department == self.department,
+                Prompt.document_type == self.document_types,
+                Prompt.doctor == self.doctor
+            ).first()
+        return None

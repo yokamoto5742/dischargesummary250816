@@ -1,9 +1,11 @@
 import streamlit as st
 
-from database.db import DatabaseManager
+from database.db import get_settings_repository
+from database.repositories import SettingsRepository
 from utils.config import CLAUDE_API_KEY, GEMINI_CREDENTIALS, GEMINI_FLASH_MODEL, GEMINI_MODEL
-from utils.constants import APP_TYPE, DEFAULT_DEPARTMENT, DOCUMENT_TYPES, DEPARTMENT_DOCTORS_MAPPING,DEFAULT_DOCUMENT_TYPE
-from utils.prompt_manager import get_prompt_manager
+from utils.constants import APP_TYPE, DEFAULT_DEPARTMENT, DOCUMENT_TYPES, DEPARTMENT_DOCTORS_MAPPING, \
+    DEFAULT_DOCUMENT_TYPE
+from utils.prompt_manager import get_prompt
 
 
 def change_page(page):
@@ -18,8 +20,7 @@ def update_document_model():
     st.session_state.selected_document_type = new_doc_type
     st.session_state.model_explicitly_selected = False
 
-    prompt_manager = get_prompt_manager()
-    prompt_data = prompt_manager.get_prompt(selected_dept, new_doc_type, selected_doctor)
+    prompt_data = get_prompt(selected_dept, new_doc_type, selected_doctor)
     if prompt_data and prompt_data.get("selected_model") in st.session_state.available_models:
         st.session_state.selected_model = prompt_data.get("selected_model")
     elif "available_models" in st.session_state and st.session_state.available_models:
@@ -161,64 +162,45 @@ def render_sidebar():
 def save_user_settings(department, model,
                        doctor="default",
                        document_type=DEFAULT_DOCUMENT_TYPE):
+    """ユーザー設定の保存（リポジトリパターン使用）"""
     try:
         if department != "default" and department not in DEFAULT_DEPARTMENT:
             department = "default"
-        db_manager = DatabaseManager.get_instance()
 
+        settings_repo: SettingsRepository = get_settings_repository()
         setting_id = f"user_preferences_{APP_TYPE}"
 
-        query = """
-                INSERT INTO app_settings
-                (setting_id, app_type, selected_department, selected_model,
-                 selected_document_type, selected_doctor, updated_at)
-                VALUES (:setting_id, :app_type, 
-                        :department, :model,
-                        :document_type, :doctor, 
-                        CURRENT_TIMESTAMP) 
-                ON CONFLICT (setting_id) 
-                DO UPDATE SET
-                    app_type = EXCLUDED.app_type,
-                    selected_department = EXCLUDED.selected_department,
-                    selected_model = EXCLUDED.selected_model,
-                    selected_document_type = EXCLUDED.selected_document_type,
-                    selected_doctor = EXCLUDED.selected_doctor,
-                    updated_at = CURRENT_TIMESTAMP
-                """
-
-        db_manager.execute_query(query, {
-            "setting_id": setting_id,
-            "app_type": APP_TYPE,
-            "department": department,
-            "model": model,
-            "document_type": document_type,
-            "doctor": doctor
-        }, fetch=False)
+        settings_repo.save_user_settings(
+            setting_id=setting_id,
+            app_type=APP_TYPE,
+            department=department,
+            model=model,
+            document_type=document_type,
+            doctor=doctor
+        )
 
     except Exception as e:
         print(f"設定の保存に失敗しました: {str(e)}")
 
 
 def load_user_settings():
+    """ユーザー設定の読み込み（リポジトリパターン使用）"""
     try:
-        from utils.constants import APP_TYPE
-
-        db_manager = DatabaseManager.get_instance()
+        settings_repo: SettingsRepository = get_settings_repository()
         setting_id = f"user_preferences_{APP_TYPE}"
 
-        query = """
-                SELECT selected_department, selected_model, selected_document_type, selected_doctor
-                FROM app_settings
-                WHERE setting_id = :setting_id
-                """
-        settings = db_manager.execute_query(query, {"setting_id": setting_id})
+        settings = settings_repo.load_user_settings(setting_id)
 
         if settings:
-            return (settings[0]["selected_department"],
-                    settings[0]["selected_model"],
-                    settings[0].get("selected_document_type", DEFAULT_DOCUMENT_TYPE),
-                    settings[0].get("selected_doctor", "default"))
+            return (
+                settings.selected_department,
+                settings.selected_model,
+                settings.selected_document_type or DEFAULT_DOCUMENT_TYPE,
+                settings.selected_doctor or "default"
+            )
+
         return None, None, None, None
+
     except Exception as e:
         print(f"設定の読み込みに失敗しました: {str(e)}")
         return None, None, None, None

@@ -1,10 +1,12 @@
 import os
 from typing import Dict, List, Any
 
-from sqlalchemy import create_engine, text
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.pool import QueuePool
 
+from database.models import Base
+from database.repositories import PromptRepository, UsageStatisticsRepository, SettingsRepository
 from utils.config import (
     POSTGRES_HOST, POSTGRES_PORT, POSTGRES_USER,
     POSTGRES_PASSWORD, POSTGRES_DB, POSTGRES_SSL,
@@ -13,65 +15,11 @@ from utils.config import (
 from utils.exceptions import DatabaseError
 
 
-class QueryBuilder:
-
-    @staticmethod
-    def build_select_query(table: str,
-                           columns: List[str] = None,
-                           where_conditions: List[str] = None,
-                           group_by: List[str] = None,
-                           order_by: List[str] = None) -> str:
-        columns_str = ", ".join(columns) if columns else "*"
-        query = f"SELECT {columns_str} FROM {table}"
-
-        if where_conditions:
-            query += f" WHERE {' AND '.join(where_conditions)}"
-
-        if group_by:
-            query += f" GROUP BY {', '.join(group_by)}"
-
-        if order_by:
-            query += f" ORDER BY {', '.join(order_by)}"
-
-        return query
-
-    @staticmethod
-    def build_upsert_query(table: str,
-                           columns: List[str],
-                           conflict_columns: List[str],
-                           update_columns: List[str] = None) -> str:
-        placeholders = [f":{col}" for col in columns]
-
-        query = f"""
-        INSERT INTO {table} ({', '.join(columns)})
-        VALUES ({', '.join(placeholders)})
-        ON CONFLICT ({', '.join(conflict_columns)})
-        DO UPDATE SET
-        """
-
-        if update_columns:
-            updates = [f"{col} = EXCLUDED.{col}" for col in update_columns]
-        else:
-            updates = [f"{col} = EXCLUDED.{col}" for col in columns if col not in conflict_columns]
-
-        query += ", ".join(updates)
-        return query
-
-    @staticmethod
-    def build_delete_query(table: str, where_conditions: List[str]) -> str:
-        return f"DELETE FROM {table} WHERE {' AND '.join(where_conditions)}"
-
-
 class DatabaseManager:
     _instance = None
     _engine = None
     _session_factory = None
-
-    @classmethod
-    def get_instance(cls):
-        if cls._instance is None:
-            cls._instance = DatabaseManager()
-        return cls._instance
+    _scoped_session = None
 
     def __init__(self):
         if DatabaseManager._engine is not None:
@@ -115,124 +63,95 @@ class DatabaseManager:
             )
 
             DatabaseManager._session_factory = sessionmaker(bind=DatabaseManager._engine)
+            DatabaseManager._scoped_session = scoped_session(DatabaseManager._session_factory)
 
-            with DatabaseManager._engine.connect() as conn:
-                conn.execute(text("SELECT 1"))
+            # テーブル作成
+            Base.metadata.create_all(DatabaseManager._engine)
 
         except Exception as e:
             raise DatabaseError(f"PostgreSQLへの接続に失敗しました: {str(e)}")
+
+    @classmethod
+    def get_instance(cls):
+        if cls._instance is None:
+            cls._instance = DatabaseManager()
+        return cls._instance
 
     @staticmethod
     def get_engine():
         return DatabaseManager._engine
 
     @staticmethod
-    def get_session():
-        if DatabaseManager._session_factory is None:
-            raise DatabaseError("データベース接続が初期化されていません")
-        return DatabaseManager._session_factory()
+    def get_session_factory():
+        return DatabaseManager._session_factory
 
-    def execute_query(self, query, params=None, fetch=True):
-        session = self.get_session()
-        try:
-            result = session.execute(text(query), params or {})
-            if fetch:
-                data = []
-                for row in result:
-                    if hasattr(row, '_mapping'):
-                        data.append(dict(row._mapping))
-                session.commit()
-                return data
-            session.commit()
-            return None
-        except Exception as e:
-            session.rollback()
-            raise DatabaseError(f"クエリ実行中にエラーが発生しました: {str(e)}")
-        finally:
-            session.close()
+    @staticmethod
+    def get_scoped_session():
+        return DatabaseManager._scoped_session
 
-    def select_with_conditions(self, table: str,
-                               conditions: Dict[str, Any] = None,
-                               columns: List[str] = None,
-                               order_by: List[str] = None) -> List[Dict[str, Any]]:
-        where_conditions = []
-        params = {}
+    # リポジトリのファクトリメソッド
+    def get_prompt_repository(self) -> PromptRepository:
+        """プロンプトリポジトリを取得"""
+        return PromptRepository(self.get_session_factory())
 
-        if conditions:
-            for key, value in conditions.items():
-                if value is not None:
-                    where_conditions.append(f"{key} = :{key}")
-                    params[key] = value
-                else:
-                    where_conditions.append(f"{key} IS NULL")
+    def get_usage_statistics_repository(self) -> UsageStatisticsRepository:
+        """使用統計リポジトリを取得"""
+        return UsageStatisticsRepository(self.get_session_factory())
 
-        query = QueryBuilder.build_select_query(
-            table=table,
-            columns=columns,
-            where_conditions=where_conditions,
-            order_by=order_by
-        )
-
-        return self.execute_query(query, params)
-
-    def upsert_record(self, table: str,
-                      data: Dict[str, Any],
-                      conflict_columns: List[str]) -> bool:
-        columns = list(data.keys())
-        query = QueryBuilder.build_upsert_query(
-            table=table,
-            columns=columns,
-            conflict_columns=conflict_columns
-        )
-
-        try:
-            self.execute_query(query, data, fetch=False)
-            return True
-        except Exception as e:
-            raise DatabaseError(f"レコードの作成/更新に失敗しました: {str(e)}")
-
-    def delete_with_conditions(self, table: str,
-                               conditions: Dict[str, Any]) -> int:
-        where_conditions = []
-        params = {}
-
-        for key, value in conditions.items():
-            if value is not None:
-                where_conditions.append(f"{key} = :{key}")
-                params[key] = value
-            else:
-                where_conditions.append(f"{key} IS NULL")
-
-        query = QueryBuilder.build_delete_query(
-            table=table,
-            where_conditions=where_conditions
-        )
-
-        session = self.get_session()
-        try:
-            result = session.execute(text(query), params)
-            deleted_count = result.rowcount
-            session.commit()
-            return deleted_count
-        except Exception as e:
-            session.rollback()
-            raise DatabaseError(f"レコードの削除に失敗しました: {str(e)}")
-        finally:
-            session.close()
+    def get_settings_repository(self) -> SettingsRepository:
+        """設定リポジトリを取得"""
+        return SettingsRepository(self.get_session_factory())
 
 
+# 後方互換性のための関数
 def get_usage_collection():
+    """使用状況の取得（後方互換性のため）"""
     try:
         db_manager = DatabaseManager.get_instance()
-        return db_manager.select_with_conditions("summary_usage")
+        usage_repo = db_manager.get_usage_statistics_repository()
+        # 簡易的な実装 - 必要に応じて期間を指定
+        import datetime
+        end_date = datetime.datetime.now()
+        start_date = end_date - datetime.timedelta(days=30)
+        return usage_repo.get_usage_records(start_date, end_date)
     except Exception as e:
         raise DatabaseError(f"使用状況の取得に失敗しました: {str(e)}")
 
 
 def get_settings_collection(app_type=None):
+    """設定の取得（後方互換性のため）"""
     try:
         db_manager = DatabaseManager.get_instance()
-        conditions = {"app_type": app_type} if app_type else None
-        return db_manager.select_with_conditions("app_settings", conditions)
+        settings_repo = db_manager.get_settings_repository()
+        settings = settings_repo.get_settings_by_app_type(app_type)
+        # 辞書形式に変換（既存コードとの互換性のため）
+        return [
+            {
+                'setting_id': s.setting_id,
+                'app_type': s.app_type,
+                'selected_department': s.selected_department,
+                'selected_model': s.selected_model,
+                'selected_document_type': s.selected_document_type,
+                'selected_doctor': s.selected_doctor,
+                'updated_at': s.updated_at
+            }
+            for s in settings
+        ]
     except Exception as e:
         raise DatabaseError(f"設定の取得に失敗しました: {str(e)}")
+
+
+# リポジトリのシングルトンインスタンス取得用関数
+def get_prompt_repository() -> PromptRepository:
+    """プロンプトリポジトリのシングルトンインスタンスを取得"""
+    return DatabaseManager.get_instance().get_prompt_repository()
+
+
+def get_usage_statistics_repository() -> UsageStatisticsRepository:
+    """使用統計リポジトリのシングルトンインスタンスを取得"""
+    return DatabaseManager.get_instance().get_usage_statistics_repository()
+
+
+def get_settings_repository() -> SettingsRepository:
+    """設定リポジトリのシングルトンインスタンスを取得"""
+    return DatabaseManager.get_instance().get_settings_repository()
