@@ -158,44 +158,6 @@ def get_prompt_manager() -> PromptManager:
 
 
 # 後方互換性のための関数（既存のコードが動作するように）
-def get_all_departments():
-    """すべての部門を取得"""
-    return DEFAULT_DEPARTMENT
-
-
-def get_all_prompts():
-    """すべてのプロンプトを取得"""
-    return get_prompt_manager().get_all_prompts()
-
-
-def create_or_update_prompt(department, document_type, doctor, content, selected_model=None):
-    """プロンプトの作成または更新"""
-    return get_prompt_manager().create_or_update_prompt(
-        department, document_type, doctor, content, selected_model
-    )
-
-
-def delete_prompt(department, document_type, doctor):
-    """プロンプトの削除"""
-    return get_prompt_manager().delete_prompt(department, document_type, doctor)
-
-
 def get_prompt(department="default", document_type=DEFAULT_DOCUMENT_TYPE, doctor="default"):
     """プロンプトの取得"""
     return get_prompt_manager().get_prompt(department, document_type, doctor)
-
-
-def initialize_default_prompt():
-    """デフォルトプロンプトの初期化"""
-    get_prompt_manager().initialize_default_prompt()
-
-
-def initialize_database():
-    """データベースの初期化"""
-    try:
-        init_schema()
-        prompt_manager = get_prompt_manager()
-        prompt_manager.initialize_default_prompt()
-        prompt_manager.initialize_all_prompts()
-    except Exception as e:
-        raise DatabaseError(f"データベースの初期化に失敗しました: {str(e)}")
