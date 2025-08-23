@@ -16,7 +16,7 @@ from utils.config import (CLAUDE_API_KEY, CLAUDE_MODEL,
 from utils.constants import APP_TYPE, MESSAGES, DEFAULT_DEPARTMENT, DEFAULT_DOCUMENT_TYPE, DOCUMENT_TYPES
 from utils.error_handlers import handle_error
 from utils.exceptions import APIError
-from utils.prompt_manager import get_prompt
+from utils.prompt_manager import get_prompt_manager
 from utils.text_processor import format_output_summary, parse_output_summary
 
 JST = pytz.timezone('Asia/Tokyo')
@@ -323,7 +323,8 @@ def get_model_from_prompt_if_needed(department: str, document_type: str, doctor:
     if model_explicitly_selected:
         return selected_model
 
-    prompt_data = get_prompt(department, document_type, doctor)
+    prompt_manager = get_prompt_manager()
+    prompt_data = prompt_manager.get_prompt(department, document_type, doctor)
     prompt_selected_model = prompt_data.get("selected_model") if prompt_data else None
 
     return prompt_selected_model or selected_model

@@ -3,7 +3,7 @@ import streamlit as st
 from utils.constants import DEPARTMENT_DOCTORS_MAPPING, DOCUMENT_TYPES, DEFAULT_DOCUMENT_TYPE
 from utils.error_handlers import handle_error
 from utils.exceptions import AppError
-from utils.prompt_manager import get_all_departments, get_prompt, create_or_update_prompt, delete_prompt
+from utils.prompt_manager import get_prompt_manager
 from utils.config import get_config
 from ui_components.navigation import change_page
 
@@ -11,7 +11,8 @@ from ui_components.navigation import change_page
 def update_document_type():
     st.session_state.selected_doc_type_for_prompt = st.session_state.prompt_document_type_selector
 
-    prompt_data = get_prompt(
+    prompt_manager = get_prompt_manager()
+    prompt_data = prompt_manager.get_prompt(
         st.session_state.selected_dept_for_prompt,
         st.session_state.selected_doc_type_for_prompt,
         st.session_state.selected_doctor_for_prompt
@@ -64,7 +65,8 @@ def render_navigation():
 
 
 def get_selection_options():
-    departments = ["default"] + get_all_departments()
+    from utils.constants import DEFAULT_DEPARTMENT
+    departments = ["default"] + DEFAULT_DEPARTMENT
     document_types = DOCUMENT_TYPES if DOCUMENT_TYPES else [DEFAULT_DOCUMENT_TYPE]
     available_models = getattr(st.session_state, "available_models", [])
 
@@ -156,7 +158,8 @@ def render_selectors():
     st.session_state.selected_doc_type_for_prompt = selected_doc_type
     st.session_state.selected_doctor_for_prompt = selected_doctor
 
-    prompt_data = get_prompt(selected_dept, selected_doc_type, selected_doctor)
+    prompt_manager = get_prompt_manager()
+    prompt_data = prompt_manager.get_prompt(selected_dept, selected_doc_type, selected_doctor)
     selected_model = get_selected_model(prompt_data, selected_doc_type, available_models)
     st.session_state.document_model_mapping[selected_doc_type] = selected_model
 
@@ -181,7 +184,8 @@ def handle_prompt_save(selected_dept, selected_doc_type, selected_doctor,
     if prompt_model:
         st.session_state.document_model_mapping[selected_doc_type] = prompt_model
 
-    success, message = create_or_update_prompt(
+    prompt_manager = get_prompt_manager()
+    success, message = prompt_manager.create_or_update_prompt(
         selected_dept,
         selected_doc_type,
         selected_doctor,
@@ -218,7 +222,8 @@ def render_prompt_form(selected_dept, selected_doc_type, selected_doctor,
 
 
 def handle_prompt_deletion(selected_dept, selected_doc_type, selected_doctor):
-    success, message = delete_prompt(selected_dept, selected_doc_type, selected_doctor)
+    prompt_manager = get_prompt_manager()
+    success, message = prompt_manager.delete_prompt(selected_dept, selected_doc_type, selected_doctor)
     if success:
         st.session_state.success_message = message
         st.session_state.selected_dept_for_prompt = "default"

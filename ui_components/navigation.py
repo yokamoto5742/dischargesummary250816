@@ -3,7 +3,7 @@ import streamlit as st
 from database.db import DatabaseManager
 from utils.config import CLAUDE_API_KEY, GEMINI_CREDENTIALS, GEMINI_FLASH_MODEL, GEMINI_MODEL
 from utils.constants import APP_TYPE, DEFAULT_DEPARTMENT, DOCUMENT_TYPES, DEPARTMENT_DOCTORS_MAPPING,DEFAULT_DOCUMENT_TYPE
-from utils.prompt_manager import get_prompt
+from utils.prompt_manager import get_prompt_manager
 
 
 def change_page(page):
@@ -18,7 +18,8 @@ def update_document_model():
     st.session_state.selected_document_type = new_doc_type
     st.session_state.model_explicitly_selected = False
 
-    prompt_data = get_prompt(selected_dept, new_doc_type, selected_doctor)
+    prompt_manager = get_prompt_manager()
+    prompt_data = prompt_manager.get_prompt(selected_dept, new_doc_type, selected_doctor)
     if prompt_data and prompt_data.get("selected_model") in st.session_state.available_models:
         st.session_state.selected_model = prompt_data.get("selected_model")
     elif "available_models" in st.session_state and st.session_state.available_models:

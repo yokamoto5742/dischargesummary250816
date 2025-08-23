@@ -4,7 +4,7 @@ from typing import Tuple, Optional
 from utils.config import get_config
 from utils.constants import DEFAULT_DOCUMENT_TYPE
 from utils.exceptions import APIError
-from utils.prompt_manager import get_prompt
+from utils.prompt_manager import get_prompt_manager
 
 
 class BaseAPIClient(ABC):
@@ -27,7 +27,8 @@ class BaseAPIClient(ABC):
                               department: str = "default",
                               document_type: str = DEFAULT_DOCUMENT_TYPE,
                               doctor: str = "default") -> str:
-        prompt_data = get_prompt(department, document_type, doctor)
+        prompt_manager = get_prompt_manager()
+        prompt_data = prompt_manager.get_prompt(department, document_type, doctor)
 
         if not prompt_data:
             config = get_config()
@@ -48,7 +49,8 @@ class BaseAPIClient(ABC):
                        department: str,
                        document_type: str,
                        doctor: str) -> str:
-        prompt_data = get_prompt(department, document_type, doctor)
+        prompt_manager = get_prompt_manager()
+        prompt_data = prompt_manager.get_prompt(department, document_type, doctor)
 
         return prompt_data.get("selected_model") if prompt_data and prompt_data.get(
             "selected_model") else self.default_model
