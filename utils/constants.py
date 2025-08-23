@@ -2,7 +2,6 @@ import os
 
 from utils.config import APP_TYPE
 
-# 既存の定数
 DEFAULT_DEPARTMENT = ["default","内科", "消化器内科", "整形外科"]
 DEFAULT_DOCTOR = ["default"]
 
@@ -27,46 +26,6 @@ TAB_NAMES = {
     "DISCHARGE_NOTES": "【退院申し送り】",
     "NOTE": "【備考】"
 }
-
-# UI関連の定数
-class UIConstants:
-    # テキストエリアの高さ
-    TEXT_AREA_HEIGHT_SMALL = 70
-    TEXT_AREA_HEIGHT_MEDIUM = 150
-    TEXT_AREA_HEIGHT_LARGE = 200
-    
-    # コードブロックの高さ
-    CODE_BLOCK_HEIGHT_SMALL = 150
-    
-    # カラム設定
-    COLUMNS_TWO = 2
-    COLUMNS_FOUR = 4
-
-# システム関連の定数
-class SystemConstants:
-    # データベース関連
-    DB_MAX_RETRIES = 5
-    DB_RETRY_BASE_WAIT = 2
-    
-    # API関連
-    CLAUDE_MAX_TOKENS = 6000
-    
-    # 処理時間関連
-    PROGRESS_UPDATE_INTERVAL = 1  # 秒
-    
-    # セッション管理
-    DEFAULT_TIMEOUT = 30  # 秒
-
-# 統計関連の定数
-class StatisticsConstants:
-    DEFAULT_DAYS_BACK = 7
-    MODEL_OPTIONS = ["すべて", "Claude", "Gemini_Pro", "Gemini_Flash"]
-    
-    MODEL_MAPPING = {
-        "Gemini_Pro": {"pattern": "gemini", "exclude": "flash"},
-        "Gemini_Flash": {"pattern": "flash", "exclude": None},
-        "Claude": {"pattern": "claude", "exclude": None},
-    }
 
 MESSAGES = {
     "PROMPT_UPDATED": "プロンプトを更新しました",

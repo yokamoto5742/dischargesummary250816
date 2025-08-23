@@ -3,12 +3,10 @@ import time
 from sqlalchemy import text
 
 from database.db import DatabaseManager
-from utils.constants import SystemConstants
 from utils.exceptions import DatabaseError
 
 
 def create_tables():
-    """データベーステーブルを作成"""
     db_manager = DatabaseManager.get_instance()
     engine = db_manager.get_engine()
 
@@ -68,19 +66,19 @@ def create_tables():
 
 
 def initialize_database():
-    """データベースを初期化（リトライ機能付き）"""
+    max_retries = 5
     retry_count = 0
     last_error = None
 
-    while retry_count < SystemConstants.DB_MAX_RETRIES:
+    while retry_count < max_retries:
         try:
             create_tables()
             return True
         except Exception as e:
             last_error = e
             retry_count += 1
-            wait_time = SystemConstants.DB_RETRY_BASE_WAIT ** retry_count  # 指数バックオフ
-            print(f"データベース初期化に失敗しました（試行 {retry_count}/{SystemConstants.DB_MAX_RETRIES}）: {str(e)}")
+            wait_time = 2 ** retry_count  # 指数バックオフ
+            print(f"データベース初期化に失敗しました（試行 {retry_count}/{max_retries}）: {str(e)}")
             print(f"{wait_time}秒後に再試行します...")
             time.sleep(wait_time)
 
