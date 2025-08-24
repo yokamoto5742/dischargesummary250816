@@ -144,7 +144,6 @@ def process_summary(input_text: str,
 
 
 def validate_inputs(input_text: str) -> None:
-    """入力の検証"""
     validate_api_credentials()
     validate_input_text(input_text)
 
@@ -176,7 +175,6 @@ def validate_api_credentials() -> None:
 
 
 def validate_input_text(input_text: str) -> None:
-    """入力テキストの検証"""
     if not input_text:
         st.warning(MESSAGES["NO_INPUT"])
         return
@@ -265,7 +263,6 @@ def handle_success_result(result: Dict[str, Any],
 
 def save_usage_to_database(result: Dict[str, Any],
                            session_params: Dict[str, Any]) -> None:
-    """使用統計をデータベースに保存（リポジトリパターン使用）"""
     try:
         usage_repo: UsageStatisticsRepository = get_usage_statistics_repository()
         now_jst = datetime.datetime.now().astimezone(JST)
