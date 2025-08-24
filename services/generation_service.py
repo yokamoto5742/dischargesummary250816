@@ -1,6 +1,4 @@
-"""
-実際のサマリー生成処理を行うサービス
-"""
+import datetime
 import queue
 import threading
 import time
@@ -16,7 +14,6 @@ from utils.text_processor import format_output_summary, parse_output_summary
 
 
 class GenerationService:
-    """サマリー生成処理を担当するサービスクラス"""
     
     @staticmethod
     def generate_summary_task(input_text: str, selected_department: str,
@@ -25,7 +22,6 @@ class GenerationService:
                              selected_document_type: str = DEFAULT_DOCUMENT_TYPE,
                              selected_doctor: str = "default",
                              model_explicitly_selected: bool = False) -> None:
-        """バックグラウンドでのサマリー生成タスク"""
         try:
             generation_params = GenerationService.prepare_generation_parameters(
                 selected_department, selected_document_type, selected_doctor,
@@ -58,7 +54,6 @@ class GenerationService:
                                     selected_doctor: str, selected_model: str,
                                     model_explicitly_selected: bool, input_text: str,
                                     additional_info: str) -> Dict[str, Any]:
-        """生成パラメーターの準備"""
         normalized_dept, normalized_doc_type = ModelService.normalize_selection_params(
             selected_department, selected_document_type
         )
@@ -88,7 +83,6 @@ class GenerationService:
                              additional_info: str, current_prescription: str,
                              normalized_dept: str, normalized_doc_type: str,
                              selected_doctor: str) -> Dict[str, Any]:
-        """API呼び出しの実行"""
         output_summary, input_tokens, output_tokens = generate_summary(
             provider=provider,
             medical_text=input_text,
@@ -110,7 +104,6 @@ class GenerationService:
     def format_generation_result(output_summary: str, input_tokens: int, output_tokens: int,
                                model_detail: str, model_switched: bool,
                                original_model: str) -> Dict[str, Any]:
-        """生成結果のフォーマット"""
         formatted_summary = format_output_summary(output_summary)
         parsed_summary = parse_output_summary(formatted_summary)
 
@@ -129,9 +122,6 @@ class GenerationService:
     def display_progress_with_timer(thread: threading.Thread,
                                   placeholder: st.empty,
                                   start_time) -> None:
-        """進捗表示とタイマー"""
-        import datetime
-        
         elapsed_time = 0
         with st.spinner("作成中..."):
             placeholder.text(f"⏱️ 経過時間: {elapsed_time}秒")

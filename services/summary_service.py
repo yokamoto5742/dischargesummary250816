@@ -1,6 +1,3 @@
-"""
-サマリー生成のメイン処理とオーケストレーションを行うサービス
-"""
 import datetime
 import queue
 import threading
@@ -16,14 +13,12 @@ from utils.exceptions import APIError
 
 
 class SummaryService:
-    """サマリー生成のメインオーケストレーションを担当するサービスクラス"""
     
     @staticmethod
     @handle_error
     def process_summary(input_text: str,
                        additional_info: str = "",
                        current_prescription: str = "") -> None:
-        """サマリー生成のメインプロセス"""
         ValidationService.validate_inputs(input_text)
         session_params = SummaryService.get_session_parameters()
 
@@ -35,7 +30,6 @@ class SummaryService:
 
     @staticmethod
     def get_session_parameters() -> Dict[str, Any]:
-        """セッションパラメーターの取得"""
         return {
             "available_models": getattr(st.session_state, "available_models", []),
             "selected_model": getattr(st.session_state, "selected_model", None),
@@ -49,7 +43,6 @@ class SummaryService:
     def execute_summary_generation(input_text: str, additional_info: str,
                                  current_prescription: str,
                                  session_params: Dict[str, Any]) -> Dict[str, Any]:
-        """サマリー生成の実行"""
         try:
             result = SummaryService.execute_summary_generation_with_ui(
                 input_text, additional_info, current_prescription, session_params
@@ -68,7 +61,6 @@ class SummaryService:
                                          additional_info: str,
                                          current_prescription: str,
                                          session_params: Dict[str, Any]) -> Dict[str, Any]:
-        """UI付きでのサマリー生成実行"""
         start_time = datetime.datetime.now()
         status_placeholder = st.empty()
         result_queue = queue.Queue()
@@ -104,7 +96,6 @@ class SummaryService:
 
     @staticmethod
     def handle_generation_result(result: Dict[str, Any], session_params: Dict[str, Any]) -> None:
-        """生成結果の処理"""
         StatisticsService.handle_success_result(result, session_params)
 
 

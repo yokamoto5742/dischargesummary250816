@@ -1,6 +1,3 @@
-"""
-使用統計の保存を行うサービス
-"""
 import datetime
 from typing import Dict, Any
 
@@ -15,12 +12,10 @@ JST = pytz.timezone('Asia/Tokyo')
 
 
 class StatisticsService:
-    """使用統計の保存を担当するサービスクラス"""
     
     @staticmethod
     def save_usage_to_database(result: Dict[str, Any],
                              session_params: Dict[str, Any]) -> None:
-        """使用統計をデータベースに保存"""
         try:
             usage_repo: UsageStatisticsRepository = get_usage_statistics_repository()
             now_jst = datetime.datetime.now().astimezone(JST)
@@ -46,7 +41,6 @@ class StatisticsService:
     @staticmethod
     def handle_success_result(result: Dict[str, Any],
                             session_params: Dict[str, Any]) -> None:
-        """成功時の結果処理"""
         st.session_state.output_summary = result["output_summary"]
         st.session_state.parsed_summary = result["parsed_summary"]
 

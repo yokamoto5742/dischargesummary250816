@@ -1,24 +1,19 @@
-"""
-モデル選択、切り替え、プロバイダー管理を行うサービス
-"""
 from typing import Tuple
 
-from utils.config import (CLAUDE_API_KEY, CLAUDE_MODEL, GEMINI_CREDENTIALS, 
-                         GEMINI_FLASH_MODEL, GEMINI_MODEL, MAX_TOKEN_THRESHOLD)
-from utils.constants import MESSAGES
+from utils.config import (CLAUDE_MODEL, GEMINI_CREDENTIALS,
+                          GEMINI_FLASH_MODEL, GEMINI_MODEL, MAX_TOKEN_THRESHOLD)
+from utils.constants import DEFAULT_DEPARTMENT, DOCUMENT_TYPES, MESSAGES
 from utils.exceptions import APIError
 from utils.prompt_manager import get_prompt_manager
 
 
 class ModelService:
-    """モデル選択とプロバイダー管理を担当するサービスクラス"""
     
     @staticmethod
     def determine_final_model(department: str, document_type: str,
                              doctor: str, selected_model: str,
                              model_explicitly_selected: bool, input_text: str,
                              additional_info: str) -> Tuple[str, bool, str]:
-        """最終的なモデルを決定（トークン制限による自動切り替えを含む）"""
         final_model = ModelService.get_model_from_prompt_if_needed(
             department, document_type, doctor, selected_model, model_explicitly_selected
         )
@@ -30,7 +25,6 @@ class ModelService:
     @staticmethod
     def get_model_from_prompt_if_needed(department: str, document_type: str, doctor: str,
                                        selected_model: str, model_explicitly_selected: bool) -> str:
-        """プロンプトからモデル情報を取得（明示的に選択されていない場合）"""
         if model_explicitly_selected:
             return selected_model
 
@@ -42,7 +36,6 @@ class ModelService:
     @staticmethod
     def check_model_switching_for_token_limit(selected_model: str, input_text: str,
                                             additional_info: str) -> Tuple[str, bool, str]:
-        """トークン制限によるモデル切り替えをチェック"""
         total_characters = len(input_text) + len(additional_info or "")
         original_model = selected_model
         model_switched = False
@@ -58,7 +51,6 @@ class ModelService:
 
     @staticmethod
     def get_provider_and_model(selected_model: str) -> Tuple[str, str]:
-        """選択されたモデルからプロバイダーとモデル名を取得"""
         provider_mapping = {
             "Claude": ("claude", CLAUDE_MODEL),
             "Gemini_Pro": ("gemini", GEMINI_MODEL),
@@ -72,9 +64,6 @@ class ModelService:
 
     @staticmethod
     def normalize_selection_params(department: str, document_type: str) -> Tuple[str, str]:
-        """部門と文書タイプの正規化"""
-        from utils.constants import DEFAULT_DEPARTMENT, DOCUMENT_TYPES
-        
         normalized_dept = department if department in DEFAULT_DEPARTMENT else "default"
         normalized_doc_type = document_type if document_type in DOCUMENT_TYPES else DOCUMENT_TYPES[0]
         return normalized_dept, normalized_doc_type
