@@ -118,7 +118,7 @@ class PromptRepository(BaseRepository):
                 if not existing:
                     default_prompt = Prompt(
                         department="default",
-                        document_type="退院時サマリ",  # デフォルト文書タイプ
+                        document_type="退院時サマリ",
                         doctor="default",
                         content=content,
                         is_default=True
@@ -161,9 +161,47 @@ class UsageStatisticsRepository(BaseRepository):
         except Exception as e:
             raise DatabaseError(f"使用統計の保存に失敗しました: {str(e)}")
 
+    def _apply_date_filter(self, query, start_date: datetime.datetime, end_date: datetime.datetime):
+        return query.filter(
+            SummaryUsage.date >= start_date,
+            SummaryUsage.date <= end_date
+        )
+
+    def _apply_model_filter(self, query, model_filter: Optional[str]):
+        if not model_filter or model_filter == "すべて":
+            return query
+
+        if model_filter == "Gemini_Pro":
+            return query.filter(
+                SummaryUsage.model_detail.ilike('%gemini%'),
+                ~SummaryUsage.model_detail.ilike('%flash%')
+            )
+        elif model_filter == "Gemini_Flash":
+            return query.filter(SummaryUsage.model_detail.ilike('%flash%'))
+        elif model_filter == "Claude":
+            return query.filter(SummaryUsage.model_detail.ilike('%claude%'))
+
+        return query
+
+    def _apply_document_type_filter(self, query, document_type_filter: Optional[str]):
+        if not document_type_filter or document_type_filter == "すべて":
+            return query
+
+        if document_type_filter == "不明":
+            return query.filter(SummaryUsage.document_types.is_(None))
+        else:
+            return query.filter(SummaryUsage.document_types == document_type_filter)
+
+    def _apply_filters(self, query, start_date: datetime.datetime, end_date: datetime.datetime,
+                       model_filter: Optional[str] = None, document_type_filter: Optional[str] = None):
+        query = self._apply_date_filter(query, start_date, end_date)
+        query = self._apply_model_filter(query, model_filter)
+        query = self._apply_document_type_filter(query, document_type_filter)
+        return query
+
     def get_usage_summary(self, start_date: datetime.datetime, end_date: datetime.datetime,
-                         model_filter: Optional[str] = None,
-                         document_type_filter: Optional[str] = None) -> Dict[str, Any]:
+                          model_filter: Optional[str] = None,
+                          document_type_filter: Optional[str] = None) -> Dict[str, Any]:
         try:
             with self.get_session() as session:
                 query = session.query(
@@ -171,27 +209,9 @@ class UsageStatisticsRepository(BaseRepository):
                     func.sum(SummaryUsage.input_tokens).label('total_input_tokens'),
                     func.sum(SummaryUsage.output_tokens).label('total_output_tokens'),
                     func.sum(SummaryUsage.total_tokens).label('total_tokens')
-                ).filter(
-                    SummaryUsage.date >= start_date,
-                    SummaryUsage.date <= end_date
                 )
 
-                if model_filter and model_filter != "すべて":
-                    if model_filter == "Gemini_Pro":
-                        query = query.filter(
-                            SummaryUsage.model_detail.ilike('%gemini%'),
-                            ~SummaryUsage.model_detail.ilike('%flash%')
-                        )
-                    elif model_filter == "Gemini_Flash":
-                        query = query.filter(SummaryUsage.model_detail.ilike('%flash%'))
-                    elif model_filter == "Claude":
-                        query = query.filter(SummaryUsage.model_detail.ilike('%claude%'))
-
-                if document_type_filter and document_type_filter != "すべて":
-                    if document_type_filter == "不明":
-                        query = query.filter(SummaryUsage.document_types.is_(None))
-                    else:
-                        query = query.filter(SummaryUsage.document_types == document_type_filter)
+                query = self._apply_filters(query, start_date, end_date, model_filter, document_type_filter)
 
                 result = query.first()
                 return {
@@ -202,11 +222,11 @@ class UsageStatisticsRepository(BaseRepository):
                 }
 
         except Exception as e:
-            raise DatabaseError(f"使用統計サマリーの取得に失敗しました: {str(e)}")
+            raise DatabaseError(f"使用統計の取得に失敗しました: {str(e)}")
 
     def get_department_statistics(self, start_date: datetime.datetime, end_date: datetime.datetime,
-                                model_filter: Optional[str] = None,
-                                document_type_filter: Optional[str] = None) -> List[Dict[str, Any]]:
+                                  model_filter: Optional[str] = None,
+                                  document_type_filter: Optional[str] = None) -> List[Dict[str, Any]]:
         try:
             with self.get_session() as session:
                 query = session.query(
@@ -218,27 +238,9 @@ class UsageStatisticsRepository(BaseRepository):
                     func.sum(SummaryUsage.output_tokens).label('output_tokens'),
                     func.sum(SummaryUsage.total_tokens).label('total_tokens'),
                     func.sum(SummaryUsage.processing_time).label('processing_time')
-                ).filter(
-                    SummaryUsage.date >= start_date,
-                    SummaryUsage.date <= end_date
                 )
 
-                if model_filter and model_filter != "すべて":
-                    if model_filter == "Gemini_Pro":
-                        query = query.filter(
-                            SummaryUsage.model_detail.ilike('%gemini%'),
-                            ~SummaryUsage.model_detail.ilike('%flash%')
-                        )
-                    elif model_filter == "Gemini_Flash":
-                        query = query.filter(SummaryUsage.model_detail.ilike('%flash%'))
-                    elif model_filter == "Claude":
-                        query = query.filter(SummaryUsage.model_detail.ilike('%claude%'))
-
-                if document_type_filter and document_type_filter != "すべて":
-                    if document_type_filter == "不明":
-                        query = query.filter(SummaryUsage.document_types.is_(None))
-                    else:
-                        query = query.filter(SummaryUsage.document_types == document_type_filter)
+                query = self._apply_filters(query, start_date, end_date, model_filter, document_type_filter)
 
                 query = query.group_by(
                     SummaryUsage.department,
@@ -265,32 +267,12 @@ class UsageStatisticsRepository(BaseRepository):
             raise DatabaseError(f"部門別統計の取得に失敗しました: {str(e)}")
 
     def get_usage_records(self, start_date: datetime.datetime, end_date: datetime.datetime,
-                         model_filter: Optional[str] = None,
-                         document_type_filter: Optional[str] = None) -> List[SummaryUsage]:
+                          model_filter: Optional[str] = None,
+                          document_type_filter: Optional[str] = None) -> List[SummaryUsage]:
         try:
             with self.get_session() as session:
-                query = session.query(SummaryUsage).filter(
-                    SummaryUsage.date >= start_date,
-                    SummaryUsage.date <= end_date
-                )
-
-                if model_filter and model_filter != "すべて":
-                    if model_filter == "Gemini_Pro":
-                        query = query.filter(
-                            SummaryUsage.model_detail.ilike('%gemini%'),
-                            ~SummaryUsage.model_detail.ilike('%flash%')
-                        )
-                    elif model_filter == "Gemini_Flash":
-                        query = query.filter(SummaryUsage.model_detail.ilike('%flash%'))
-                    elif model_filter == "Claude":
-                        query = query.filter(SummaryUsage.model_detail.ilike('%claude%'))
-
-                if document_type_filter and document_type_filter != "すべて":
-                    if document_type_filter == "不明":
-                        query = query.filter(SummaryUsage.document_types.is_(None))
-                    else:
-                        query = query.filter(SummaryUsage.document_types == document_type_filter)
-
+                query = session.query(SummaryUsage)
+                query = self._apply_filters(query, start_date, end_date, model_filter, document_type_filter)
                 return query.order_by(desc(SummaryUsage.date)).all()
 
         except Exception as e:
