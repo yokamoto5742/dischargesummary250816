@@ -1,6 +1,6 @@
-from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, UniqueConstraint, ForeignKey
+from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, UniqueConstraint
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, object_session
 from sqlalchemy.sql import func
 
 Base = declarative_base()
@@ -36,7 +36,6 @@ class Prompt(Base):
     created_at = Column(DateTime(timezone=True), default=func.now())
     updated_at = Column(DateTime(timezone=True), default=func.now(), onupdate=func.now())
 
-    # リレーションシップ（使用統計との関連）
     usage_stats = relationship(
         "SummaryUsage",
         primaryjoin="and_(Prompt.department==SummaryUsage.department, "
@@ -68,8 +67,6 @@ class SummaryUsage(Base):
 
     @property
     def related_prompt(self):
-        """関連するプロンプトを取得するプロパティ"""
-        from sqlalchemy.orm import object_session
         session = object_session(self)
         if session:
             return session.query(Prompt).filter(
