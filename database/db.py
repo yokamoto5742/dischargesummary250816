@@ -1,5 +1,4 @@
 import os
-from typing import Dict, List, Any
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
@@ -64,8 +63,6 @@ class DatabaseManager:
 
             DatabaseManager._session_factory = sessionmaker(bind=DatabaseManager._engine)
             DatabaseManager._scoped_session = scoped_session(DatabaseManager._session_factory)
-
-            # テーブル作成
             Base.metadata.create_all(DatabaseManager._engine)
 
         except Exception as e:
@@ -89,69 +86,23 @@ class DatabaseManager:
     def get_scoped_session():
         return DatabaseManager._scoped_session
 
-    # リポジトリのファクトリメソッド
     def get_prompt_repository(self) -> PromptRepository:
-        """プロンプトリポジトリを取得"""
         return PromptRepository(self.get_session_factory())
 
     def get_usage_statistics_repository(self) -> UsageStatisticsRepository:
-        """使用統計リポジトリを取得"""
         return UsageStatisticsRepository(self.get_session_factory())
 
     def get_settings_repository(self) -> SettingsRepository:
-        """設定リポジトリを取得"""
         return SettingsRepository(self.get_session_factory())
 
 
-# 後方互換性のための関数
-def get_usage_collection():
-    """使用状況の取得（後方互換性のため）"""
-    try:
-        db_manager = DatabaseManager.get_instance()
-        usage_repo = db_manager.get_usage_statistics_repository()
-        # 簡易的な実装 - 必要に応じて期間を指定
-        import datetime
-        end_date = datetime.datetime.now()
-        start_date = end_date - datetime.timedelta(days=30)
-        return usage_repo.get_usage_records(start_date, end_date)
-    except Exception as e:
-        raise DatabaseError(f"使用状況の取得に失敗しました: {str(e)}")
-
-
-def get_settings_collection(app_type=None):
-    """設定の取得（後方互換性のため）"""
-    try:
-        db_manager = DatabaseManager.get_instance()
-        settings_repo = db_manager.get_settings_repository()
-        settings = settings_repo.get_settings_by_app_type(app_type)
-        # 辞書形式に変換（既存コードとの互換性のため）
-        return [
-            {
-                'setting_id': s.setting_id,
-                'app_type': s.app_type,
-                'selected_department': s.selected_department,
-                'selected_model': s.selected_model,
-                'selected_document_type': s.selected_document_type,
-                'selected_doctor': s.selected_doctor,
-                'updated_at': s.updated_at
-            }
-            for s in settings
-        ]
-    except Exception as e:
-        raise DatabaseError(f"設定の取得に失敗しました: {str(e)}")
-
-
-# リポジトリのシングルトンインスタンス取得用関数
 def get_prompt_repository() -> PromptRepository:
-    """プロンプトリポジトリのシングルトンインスタンスを取得"""
     return DatabaseManager.get_instance().get_prompt_repository()
 
 
 def get_usage_statistics_repository() -> UsageStatisticsRepository:
-    """使用統計リポジトリのシングルトンインスタンスを取得"""
     return DatabaseManager.get_instance().get_usage_statistics_repository()
 
 
 def get_settings_repository() -> SettingsRepository:
-    """設定リポジトリのシングルトンインスタンスを取得"""
     return DatabaseManager.get_instance().get_settings_repository()

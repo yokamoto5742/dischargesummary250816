@@ -94,7 +94,6 @@ def usage_statistics_ui():
         # 部門別統計データフレームの表示
         if dept_data:
             dept_df = pd.DataFrame(dept_data)
-            st.subheader("部門別統計")
             st.dataframe(dept_df, hide_index=True)
 
         # 詳細レコードの表示用データ作成
@@ -134,24 +133,7 @@ def usage_statistics_ui():
         # 詳細レコードデータフレームの表示
         if detail_data:
             detail_df = pd.DataFrame(detail_data)
-            st.subheader("詳細レコード")
             st.dataframe(detail_df, hide_index=True)
-
-        # 統計サマリーの表示
-        st.subheader("期間統計")
-        summary_col1, summary_col2, summary_col3, summary_col4 = st.columns(4)
-
-        with summary_col1:
-            st.metric("総件数", f"{total_summary['count']:,}")
-
-        with summary_col2:
-            st.metric("総入力トークン", f"{total_summary['total_input_tokens']:,}")
-
-        with summary_col3:
-            st.metric("総出力トークン", f"{total_summary['total_output_tokens']:,}")
-
-        with summary_col4:
-            st.metric("総トークン", f"{total_summary['total_tokens']:,}")
 
     except Exception as e:
         st.error(f"統計データの取得中にエラーが発生しました: {str(e)}")
