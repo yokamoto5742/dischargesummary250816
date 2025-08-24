@@ -121,7 +121,6 @@ class PromptManager:
             raise DatabaseError(f"デフォルトプロンプトの初期化に失敗しました: {str(e)}")
 
     def initialize_all_prompts(self):
-        """すべてのプロンプトの初期化"""
         try:
             prompts_data = []
 

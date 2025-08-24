@@ -1,12 +1,15 @@
 import datetime
 from typing import Dict, List, Any, Optional, Tuple
+
+from sqlalchemy import func, desc
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy import and_, or_, func, desc
-from database.models import Base, AppSetting, Prompt, SummaryUsage
+
+from database.models import AppSetting, Prompt, SummaryUsage
 from utils.exceptions import DatabaseError
 
 
 class BaseRepository:
+
     def __init__(self, session_factory: sessionmaker):
         self.session_factory = session_factory
 
@@ -15,10 +18,8 @@ class BaseRepository:
 
 
 class PromptRepository(BaseRepository):
-    """プロンプト管理のリポジトリクラス"""
 
     def get_by_keys(self, department: str, document_type: str, doctor: str) -> Optional[Prompt]:
-        """部門、文書タイプ、医師でプロンプトを取得"""
         try:
             with self.get_session() as session:
                 return session.query(Prompt).filter(
@@ -30,7 +31,6 @@ class PromptRepository(BaseRepository):
             raise DatabaseError(f"プロンプトの取得に失敗しました: {str(e)}")
 
     def get_default_prompt(self) -> Optional[Prompt]:
-        """デフォルトプロンプトを取得"""
         try:
             with self.get_session() as session:
                 return session.query(Prompt).filter(
@@ -42,7 +42,6 @@ class PromptRepository(BaseRepository):
 
     def create_or_update(self, department: str, document_type: str, doctor: str,
                         content: str, selected_model: Optional[str] = None) -> Tuple[bool, str]:
-        """プロンプトの作成または更新"""
         try:
             with self.get_session() as session:
                 existing_prompt = session.query(Prompt).filter(
@@ -76,7 +75,6 @@ class PromptRepository(BaseRepository):
             raise DatabaseError(f"プロンプトの作成/更新に失敗しました: {str(e)}")
 
     def delete_by_keys(self, department: str, document_type: str, doctor: str) -> Tuple[bool, str]:
-        """プロンプトの削除"""
         try:
             with self.get_session() as session:
                 prompt = session.query(Prompt).filter(
@@ -99,7 +97,6 @@ class PromptRepository(BaseRepository):
             raise DatabaseError(f"プロンプトの削除に失敗しました: {str(e)}")
 
     def get_all(self) -> List[Prompt]:
-        """すべてのプロンプトを取得"""
         try:
             with self.get_session() as session:
                 return session.query(Prompt).order_by(
@@ -111,7 +108,6 @@ class PromptRepository(BaseRepository):
             raise DatabaseError(f"プロンプト一覧の取得に失敗しました: {str(e)}")
 
     def create_default_prompt(self, content: str) -> None:
-        """デフォルトプロンプトの作成"""
         try:
             with self.get_session() as session:
                 existing = session.query(Prompt).filter(
@@ -134,7 +130,6 @@ class PromptRepository(BaseRepository):
             raise DatabaseError(f"デフォルトプロンプトの作成に失敗しました: {str(e)}")
 
     def bulk_create_prompts(self, prompts_data: List[Dict[str, Any]]) -> None:
-        """複数プロンプトの一括作成"""
         try:
             with self.get_session() as session:
                 for data in prompts_data:
@@ -155,10 +150,8 @@ class PromptRepository(BaseRepository):
 
 
 class UsageStatisticsRepository(BaseRepository):
-    """使用統計のリポジトリクラス"""
 
     def save_usage(self, usage_data: Dict[str, Any]) -> None:
-        """使用統計の保存"""
         try:
             with self.get_session() as session:
                 usage = SummaryUsage(**usage_data)
@@ -171,7 +164,6 @@ class UsageStatisticsRepository(BaseRepository):
     def get_usage_summary(self, start_date: datetime.datetime, end_date: datetime.datetime,
                          model_filter: Optional[str] = None,
                          document_type_filter: Optional[str] = None) -> Dict[str, Any]:
-        """期間の使用統計サマリーを取得"""
         try:
             with self.get_session() as session:
                 query = session.query(
@@ -184,7 +176,6 @@ class UsageStatisticsRepository(BaseRepository):
                     SummaryUsage.date <= end_date
                 )
 
-                # モデルフィルター
                 if model_filter and model_filter != "すべて":
                     if model_filter == "Gemini_Pro":
                         query = query.filter(
@@ -196,7 +187,6 @@ class UsageStatisticsRepository(BaseRepository):
                     elif model_filter == "Claude":
                         query = query.filter(SummaryUsage.model_detail.ilike('%claude%'))
 
-                # 文書タイプフィルター
                 if document_type_filter and document_type_filter != "すべて":
                     if document_type_filter == "不明":
                         query = query.filter(SummaryUsage.document_types.is_(None))
@@ -217,7 +207,6 @@ class UsageStatisticsRepository(BaseRepository):
     def get_department_statistics(self, start_date: datetime.datetime, end_date: datetime.datetime,
                                 model_filter: Optional[str] = None,
                                 document_type_filter: Optional[str] = None) -> List[Dict[str, Any]]:
-        """部門別統計を取得"""
         try:
             with self.get_session() as session:
                 query = session.query(
@@ -234,7 +223,6 @@ class UsageStatisticsRepository(BaseRepository):
                     SummaryUsage.date <= end_date
                 )
 
-                # フィルター適用（上記と同じロジック）
                 if model_filter and model_filter != "すべて":
                     if model_filter == "Gemini_Pro":
                         query = query.filter(
@@ -279,7 +267,6 @@ class UsageStatisticsRepository(BaseRepository):
     def get_usage_records(self, start_date: datetime.datetime, end_date: datetime.datetime,
                          model_filter: Optional[str] = None,
                          document_type_filter: Optional[str] = None) -> List[SummaryUsage]:
-        """使用記録の詳細を取得"""
         try:
             with self.get_session() as session:
                 query = session.query(SummaryUsage).filter(
@@ -287,7 +274,6 @@ class UsageStatisticsRepository(BaseRepository):
                     SummaryUsage.date <= end_date
                 )
 
-                # フィルター適用（上記と同じロジック）
                 if model_filter and model_filter != "すべて":
                     if model_filter == "Gemini_Pro":
                         query = query.filter(
@@ -312,11 +298,9 @@ class UsageStatisticsRepository(BaseRepository):
 
 
 class SettingsRepository(BaseRepository):
-    """設定管理のリポジトリクラス"""
 
     def save_user_settings(self, setting_id: str, app_type: str,
                           department: str, model: str, document_type: str, doctor: str) -> None:
-        """ユーザー設定の保存"""
         try:
             with self.get_session() as session:
                 existing = session.query(AppSetting).filter(
@@ -347,7 +331,6 @@ class SettingsRepository(BaseRepository):
             raise DatabaseError(f"設定の保存に失敗しました: {str(e)}")
 
     def load_user_settings(self, setting_id: str) -> Optional[AppSetting]:
-        """ユーザー設定の読み込み"""
         try:
             with self.get_session() as session:
                 return session.query(AppSetting).filter(
@@ -358,7 +341,6 @@ class SettingsRepository(BaseRepository):
             raise DatabaseError(f"設定の読み込みに失敗しました: {str(e)}")
 
     def get_settings_by_app_type(self, app_type: Optional[str] = None) -> List[AppSetting]:
-        """アプリタイプ別設定を取得"""
         try:
             with self.get_session() as session:
                 query = session.query(AppSetting)
