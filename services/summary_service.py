@@ -97,11 +97,3 @@ class SummaryService:
     @staticmethod
     def handle_generation_result(result: Dict[str, Any], session_params: Dict[str, Any]) -> None:
         StatisticsService.handle_success_result(result, session_params)
-
-
-# 後方互換性のためのエイリアス関数
-def process_summary(input_text: str,
-                   additional_info: str = "",
-                   current_prescription: str = "") -> None:
-    """後方互換性のためのラッパー関数"""
-    return SummaryService.process_summary(input_text, additional_info, current_prescription)

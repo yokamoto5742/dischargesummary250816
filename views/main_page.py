@@ -1,6 +1,6 @@
 import streamlit as st
 
-from services.summary_service import process_summary
+from services.summary_service import SummaryService
 from utils.constants import MESSAGES, TAB_NAMES, DOCUMENT_TYPES, DEFAULT_SECTION_NAMES
 from utils.error_handlers import handle_error
 from ui_components.navigation import render_sidebar
@@ -50,7 +50,7 @@ def render_input_section():
 
     with col1:
         if st.button("作成", type="primary"):
-            process_summary(input_text, additional_info, current_prescription)
+            SummaryService.process_summary(input_text, additional_info, current_prescription)
 
     with col2:
         if st.button("テキストをクリア", on_click=clear_inputs):
