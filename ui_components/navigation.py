@@ -3,8 +3,7 @@ import streamlit as st
 from database.db import get_settings_repository
 from database.repositories import SettingsRepository
 from utils.config import CLAUDE_API_KEY, GEMINI_CREDENTIALS, GEMINI_FLASH_MODEL, GEMINI_MODEL
-from utils.constants import APP_TYPE, DEFAULT_DEPARTMENT, DOCUMENT_TYPES, DEPARTMENT_DOCTORS_MAPPING, \
-    DEFAULT_DOCUMENT_TYPE
+from utils.constants import APP_TYPE, DEFAULT_DEPARTMENT, DOCUMENT_TYPES, DEPARTMENT_DOCTORS_MAPPING, DEFAULT_DOCUMENT_TYPE
 from utils.prompt_manager import get_prompt_manager
 
 
@@ -147,8 +146,7 @@ def render_sidebar():
         st.session_state.selected_model = st.session_state.available_models[0]
         st.session_state.model_explicitly_selected = False
 
-    st.sidebar.markdown("・入力および出力テキストは保存されません")
-    st.sidebar.markdown("・出力結果は必ず確認してください")
+    st.sidebar.markdown("生成AIの回答は誤りを含む場合があリます。必ずカルテで内容をお確かめください。")
 
     if st.sidebar.button("プロンプト管理", key="sidebar_prompt_management"):
         change_page("prompt_edit")
@@ -184,7 +182,6 @@ def save_user_settings(department, model,
 
 
 def load_user_settings():
-    """ユーザー設定の読み込み（リポジトリパターン使用）"""
     try:
         settings_repo: SettingsRepository = get_settings_repository()
         setting_id = f"user_preferences_{APP_TYPE}"
