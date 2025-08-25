@@ -6,7 +6,7 @@ import streamlit as st
 
 from database.db import get_usage_statistics_repository
 from database.repositories import UsageStatisticsRepository
-from utils.constants import DOCUMENT_NAME_OPTIONS, MESSAGES
+from utils.constants import DOCUMENT_NAME_OPTIONS, MESSAGES, MODEL_OPTIONS
 from utils.error_handlers import handle_error
 from ui_components.navigation import change_page
 
@@ -27,7 +27,6 @@ def usage_statistics_ui():
 
     usage_repo: UsageStatisticsRepository = get_usage_statistics_repository()
 
-    # フィルター条件の設定
     col1, col2 = st.columns(2)
 
     with col1:
@@ -35,8 +34,7 @@ def usage_statistics_ui():
         start_date = st.date_input("開始日", today - datetime.timedelta(days=7))
 
     with col2:
-        models = ["すべて", "Claude", "Gemini_Pro", "Gemini_Flash"]
-        selected_model = st.selectbox("AIモデル", models, index=0)
+        selected_model = st.selectbox("AIモデル", MODEL_OPTIONS, index=0)
 
     col3, col4 = st.columns(2)
 
@@ -46,16 +44,13 @@ def usage_statistics_ui():
     with col4:
         selected_document_type = st.selectbox("文書名", DOCUMENT_NAME_OPTIONS, index=0)
 
-    # 日付を datetime に変換
     start_datetime = datetime.datetime.combine(start_date, datetime.time.min)
     end_datetime = datetime.datetime.combine(end_date, datetime.time.max)
 
-    # フィルター設定
     model_filter = selected_model if selected_model != "すべて" else None
     document_type_filter = selected_document_type if selected_document_type != "すべて" else None
 
     try:
-        # 統計サマリーを取得
         total_summary = usage_repo.get_usage_summary(
             start_datetime, end_datetime, model_filter, document_type_filter
         )
@@ -64,17 +59,14 @@ def usage_statistics_ui():
             st.info(MESSAGES["NO_DATA_FOUND"])
             return
 
-        # 部門別統計を取得
         dept_statistics = usage_repo.get_department_statistics(
             start_datetime, end_datetime, model_filter, document_type_filter
         )
 
-        # 詳細レコードを取得
         usage_records = usage_repo.get_usage_records(
             start_datetime, end_datetime, model_filter, document_type_filter
         )
 
-        # 部門別統計の表示用データ作成
         dept_data = []
         for stat in dept_statistics:
             dept_name = "全科共通" if stat["department"] == "default" else stat["department"]
@@ -91,18 +83,15 @@ def usage_statistics_ui():
                 "合計トークン": stat["total_tokens"],
             })
 
-        # 部門別統計データフレームの表示
         if dept_data:
             dept_df = pd.DataFrame(dept_data)
             st.dataframe(dept_df, hide_index=True)
 
-        # 詳細レコードの表示用データ作成
         detail_data = []
         for record in usage_records:
             model_detail = str(record.model_detail or "").lower()
             model_info = "Gemini_Pro"  # デフォルト
 
-            # モデル情報の判定
             for model_name, config in MODEL_MAPPING.items():
                 pattern = config["pattern"]
                 exclude = config["exclude"]
@@ -113,7 +102,6 @@ def usage_statistics_ui():
                     model_info = model_name
                     break
 
-            # 日時の変換
             if record.date.tzinfo:
                 jst_date = record.date.astimezone(JST)
             else:
@@ -130,7 +118,6 @@ def usage_statistics_ui():
                 "処理時間(秒)": round(record.processing_time) if record.processing_time else 0,
             })
 
-        # 詳細レコードデータフレームの表示
         if detail_data:
             detail_df = pd.DataFrame(detail_data)
             st.dataframe(detail_df, hide_index=True)

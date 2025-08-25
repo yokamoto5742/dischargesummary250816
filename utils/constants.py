@@ -13,6 +13,8 @@ DEFAULT_DOCUMENT_TYPE = "退院時サマリ"
 DOCUMENT_TYPES = ["退院時サマリ", "現病歴"]
 DOCUMENT_NAME_OPTIONS = ["退院時サマリ", "現病歴", "すべて"]
 
+MODEL_OPTIONS =  ["すべて", "Claude", "Gemini_Pro", "Gemini_Flash"]
+
 DEFAULT_SECTION_NAMES = [
     "入院期間", "現病歴", "入院時検査", "入院中の治療経過", "退院申し送り", "備考"
 ]
