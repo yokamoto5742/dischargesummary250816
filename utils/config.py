@@ -57,4 +57,4 @@ MAX_INPUT_TOKENS = int(os.environ.get("MAX_INPUT_TOKENS", "300000"))
 MIN_INPUT_TOKENS = int(os.environ.get("MIN_INPUT_TOKENS", "100"))
 MAX_TOKEN_THRESHOLD = int(os.environ.get("MAX_TOKEN_THRESHOLD", "100000"))
 
-APP_TYPE = os.environ.get("APP_TYPE", "default")
+APP_TYPE = os.environ.get("APP_TYPE", "dischargesummary")

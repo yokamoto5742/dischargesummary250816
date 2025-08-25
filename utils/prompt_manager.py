@@ -6,11 +6,9 @@ from database.repositories import PromptRepository
 from utils.config import get_config
 from utils.constants import DEFAULT_DEPARTMENT, DOCUMENT_TYPES, DEPARTMENT_DOCTORS_MAPPING, DEFAULT_DOCUMENT_TYPE
 from utils.exceptions import DatabaseError, AppError
-from database.schema import initialize_database as init_schema
 
 
 class PromptManager:
-    """プロンプト管理クラス（リポジトリパターン使用）"""
 
     def __init__(self):
         self.prompt_repository: PromptRepository = get_prompt_repository()
@@ -19,9 +17,7 @@ class PromptManager:
     def get_prompt(self, department: str = "default",
                    document_type: str = DEFAULT_DOCUMENT_TYPE,
                    doctor: str = "default") -> Optional[Dict[str, Any]]:
-        """プロンプトを取得"""
         try:
-            # 指定された条件でプロンプトを検索
             prompt = self.prompt_repository.get_by_keys(department, document_type, doctor)
 
             if prompt:
@@ -37,7 +33,6 @@ class PromptManager:
                     'updated_at': prompt.updated_at
                 }
 
-            # デフォルトプロンプトを取得
             default_prompt = self.prompt_repository.get_default_prompt()
             if default_prompt:
                 return {
@@ -62,7 +57,6 @@ class PromptManager:
     def create_or_update_prompt(self, department: str, document_type: str,
                                 doctor: str, content: str,
                                 selected_model: Optional[str] = None) -> Tuple[bool, str]:
-        """プロンプトの作成または更新"""
         try:
             if not all([department, document_type, doctor, content]):
                 return False, "すべての項目を入力してください"
@@ -78,7 +72,6 @@ class PromptManager:
 
     def delete_prompt(self, department: str, document_type: str,
                       doctor: str) -> Tuple[bool, str]:
-        """プロンプトの削除"""
         try:
             if (department == "default" and
                     document_type == DEFAULT_DOCUMENT_TYPE and
@@ -93,7 +86,6 @@ class PromptManager:
             raise AppError(f"プロンプトの削除中にエラーが発生しました: {str(e)}")
 
     def get_all_prompts(self) -> List[Dict[str, Any]]:
-        """すべてのプロンプトを取得"""
         try:
             prompts = self.prompt_repository.get_all()
             return [
@@ -114,7 +106,6 @@ class PromptManager:
             raise DatabaseError(f"プロンプト一覧の取得に失敗しました: {str(e)}")
 
     def initialize_default_prompt(self):
-        """デフォルトプロンプトの初期化"""
         try:
             self.prompt_repository.create_default_prompt(self.default_prompt_content)
         except Exception as e:
@@ -144,12 +135,10 @@ class PromptManager:
             raise DatabaseError(f"プロンプト初期化に失敗しました: {str(e)}")
 
 
-# シングルトンインスタンス
 _prompt_manager = None
 
 
 def get_prompt_manager() -> PromptManager:
-    """プロンプトマネージャーのシングルトンインスタンスを取得"""
     global _prompt_manager
     if _prompt_manager is None:
         _prompt_manager = PromptManager()
