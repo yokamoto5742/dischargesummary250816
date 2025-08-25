@@ -146,7 +146,7 @@ def render_sidebar():
         st.session_state.selected_model = st.session_state.available_models[0]
         st.session_state.model_explicitly_selected = False
 
-    st.sidebar.markdown("生成AIの回答は誤りを含む場合があリます。必ずカルテで内容をお確かめください。")
+    st.sidebar.markdown("生成AIは不正確な場合があります。回答をカルテでご確認ください。")
 
     if st.sidebar.button("プロンプト管理", key="sidebar_prompt_management"):
         change_page("prompt_edit")
@@ -160,7 +160,6 @@ def render_sidebar():
 def save_user_settings(department, model,
                        doctor="default",
                        document_type=DEFAULT_DOCUMENT_TYPE):
-    """ユーザー設定の保存（リポジトリパターン使用）"""
     try:
         if department != "default" and department not in DEFAULT_DEPARTMENT:
             department = "default"
