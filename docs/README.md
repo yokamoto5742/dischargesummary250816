@@ -1,24 +1,22 @@
-# 診療情報提供書作成アプリ
+# 退院時サマリ作成アプリ
 
-このアプリケーションは、生成AIを活用して診療情報提供書を効率的に作成するためのWebアプリケーションです。
+このアプリケーションは、生成AIを活用して退院時サマリや現病歴などの医療文書を効率的に作成するためのWebアプリケーションです。
 
 ## 主な機能
 
 ### 📋 文書作成機能
-- **診療情報提供書**、**他院への紹介**、**返書**の文書の自動生成
-- カルテ情報と追加情報を入力するだけで高精度な文書を作成
-- 生成結果は「全文」「主病名」「紹介目的」「既往歴」「症状経過」「治療経過」「現在の処方」「備考」のタブ形式で表示
+- **退院時サマリ**、**現病歴**の自動生成
+- 生成結果は「全文」「入院期間」「現病歴」「入院時検査」「入院中の治療経過」「退院申し送り」「備考」のタブ形式で表示
 
 ### 🤖 複数AIモデル対応
 - **Claude** (Anthropic)
-- **Gemini Pro** (Google)
-- **Gemini Flash** (Google) - 高速処理
-- 入力文字数に応じた自動モデル切り替え機能
+- **Gemini** (Google)
+- 入力文字数に応じた自動モデル切り替え機能（Claude → Gemini Pro）
 
 ### ⚙️ カスタマイズ機能
 - 診療科別、医師別、文書タイプごとの専用プロンプト設定
 - AIモデルの選択・設定保存
-- 紹介目的の文書タイプ別自動設定
+- ユーザー設定の自動保存・復元
 
 ### 📊 統計・管理機能
 - 使用状況の統計表示（作成件数、トークン使用量、処理時間）
@@ -41,7 +39,7 @@
 ### 1. リポジトリのクローン
 ```bash
 git clone <リポジトリURL>
-cd medical-document-generator
+cd medical-summary-app
 ```
 
 ### 2. 仮想環境の作成（推奨）
@@ -49,8 +47,6 @@ cd medical-document-generator
 python -m venv venv
 # Windows
 venv\Scripts\activate
-# macOS/Linux
-source venv/bin/activate
 ```
 
 ### 3. 依存関係のインストール
@@ -74,14 +70,21 @@ CLAUDE_MODEL=claude-3-5-sonnet-20241022
 GEMINI_CREDENTIALS=your_gemini_api_key
 GEMINI_MODEL=gemini-2.0-flash-thinking-exp
 GEMINI_FLASH_MODEL=gemini-1.5-flash
+GEMINI_THINKING_BUDGET=10000
 
 # トークン制限設定
-MAX_INPUT_TOKENS=200000
+MAX_INPUT_TOKENS=300000
 MIN_INPUT_TOKENS=100
-MAX_CHARACTER_THRESHOLD=40000
+MAX_TOKEN_THRESHOLD=100000
+
+# データベース接続プール設定
+DB_POOL_SIZE=5
+DB_MAX_OVERFLOW=10
+DB_POOL_TIMEOUT=30
+DB_POOL_RECYCLE=3600
 
 # アプリケーション設定
-APP_TYPE=medical_referral
+APP_TYPE=dischargesummary
 ```
 
 ## 使用方法
@@ -97,12 +100,11 @@ streamlit run app.py
 
 #### 1. 文書作成
 1. **サイドバー**で診療科、医師名、文書タイプ、AIモデルを選択
-2. **紹介目的**を入力（文書タイプ別に自動設定）
-3. **現在の処方**を入力（任意）
-4. **カルテ記載**にカルテ情報を入力
-5. **追加情報**に前回記載や補足情報を入力（任意）
-6. **「作成」ボタン**をクリック
-7. 生成された文書をタブ別に確認・コピー
+2. **退院時処方**を入力（任意）
+3. **カルテ記載**にカルテ情報を入力
+4. **追加情報**に補足情報を入力（任意）
+5. **「作成」ボタン**をクリック
+6. 生成された文書をタブ別に確認・コピー
 
 #### 2. プロンプト管理
 1. サイドバーの**「プロンプト管理」**をクリック
@@ -122,56 +124,69 @@ streamlit run app.py
 `utils/constants.py`の以下の部分を編集：
 
 ```python
-DEFAULT_DEPARTMENT = ["default", "眼科", "整形外科"]
+DEFAULT_DEPARTMENT = ["default", "内科", "消化器内科", "整形外科"]
 
 DEPARTMENT_DOCTORS_MAPPING = {
     "default": ["default", "医師共通"],
-    "眼科": ["default", "佐藤医師"],
+    "内科": ["default", "田中医師", "佐藤医師"],
     "整形外科": ["default", "鈴木医師"]
 }
 ```
 
 ### 文書タイプの追加
 ```python
-DOCUMENT_TYPES = ["診療情報提供書", "他院への紹介", "返書"]
+DOCUMENT_TYPES = ["退院時サマリ", "現病歴"]
+DEFAULT_DOCUMENT_TYPE = "退院時サマリ"
+```
 
-DOCUMENT_TYPE_TO_PURPOSE_MAPPING = {
-    "診療情報提供書": "精査加療依頼",
-    "他院への紹介": "継続治療依頼",
-    "返書": "受診報告"
-}
+### セクション名のカスタマイズ
+```python
+DEFAULT_SECTION_NAMES = [
+    "入院期間", "現病歴", "入院時検査", 
+    "入院中の治療経過", "退院申し送り", "備考"
+]
 ```
 
 ## 開発者向け情報
 
 ### プロジェクト構造
 ```
-├── app.py                    # メインアプリケーション
-├── config.ini               # 設定ファイル
-├── database/                # データベース関連
-│   ├── db.py                # DB接続・操作
-│   ├── models.py            # SQLAlchemyモデル
-│   └── schema.py            # テーブル作成
-├── external_service/        # 外部API連携
-│   ├── api_factory.py       # APIファクトリー
-│   ├── base_api.py          # 基底APIクラス
-│   ├── claude_api.py        # Claude API
-│   ├── gemini_api.py        # Gemini API
-│   └── openai_api.py        # OpenAI API(オプション)
-├── services/                # ビジネスロジック
-│   └── summary_service.py   # サマリー生成サービス
-├── ui_components/           # UIコンポーネント
-│   └── navigation.py        # ナビゲーション・設定
-├── utils/                   # ユーティリティ
-│   ├── config.py            # 設定管理
-│   ├── constants.py         # 定数定義
-│   ├── exceptions.py        # 例外クラス
-│   ├── prompt_manager.py    # プロンプト管理
-│   └── text_processor.py    # テキスト処理
-└── views/                   # ページビュー
-    ├── main_page.py         # メインページ
-    ├── prompt_management_page.py  # プロンプト管理
-    └── statistics_page.py   # 統計ページ
+├── app.py                        # メインアプリケーション
+├── config.ini                    # 設定ファイル
+├── Procfile                      # Heroku用設定
+├── requirements.txt              # Python依存関係
+├── runtime.txt                   # Python実行環境
+├── setup.sh                     # Streamlit設定
+├── database/                     # データベース関連
+│   ├── db.py                     # DB接続管理
+│   ├── models.py                 # SQLAlchemyモデル
+│   ├── repositories.py           # データアクセス層
+│   └── schema.py                 # テーブル管理
+├── external_service/             # 外部API連携
+│   ├── api_factory.py            # APIファクトリー
+│   ├── base_api.py               # 基底APIクラス
+│   ├── claude_api.py             # Claude API
+│   └── gemini_api.py             # Gemini API
+├── services/                     # ビジネスロジック
+│   ├── generation_service.py     # 文書生成サービス
+│   ├── model_service.py          # モデル管理サービス
+│   ├── statistics_service.py     # 統計サービス
+│   ├── summary_service.py        # サマリー作成サービス
+│   └── validation_service.py     # バリデーションサービス
+├── ui_components/                # UIコンポーネント
+│   └── navigation.py             # ナビゲーション・設定
+├── utils/                        # ユーティリティ
+│   ├── config.py                 # 設定管理
+│   ├── constants.py              # 定数定義
+│   ├── env_loader.py             # 環境変数読み込み
+│   ├── error_handlers.py         # エラーハンドリング
+│   ├── exceptions.py             # 例外クラス
+│   ├── prompt_manager.py         # プロンプト管理
+│   └── text_processor.py         # テキスト処理
+└── views/                        # ページビュー
+    ├── main_page.py              # メインページ
+    ├── prompt_management_page.py # プロンプト管理
+    └── statistics_page.py        # 統計ページ
 ```
 
 ### データベーステーブル
@@ -189,7 +204,7 @@ DOCUMENT_TYPE_TO_PURPOSE_MAPPING = {
 ### 主要機能
 
 #### 自動モデル切り替え
-- Claude選択時に入力テキストが40,000文字を超える場合、自動的にGemini Proに切り替え
+- Claude選択時に入力テキストが設定された文字数を超える場合、自動的にGemini_Proに切り替え
 - 切り替え時にはユーザーに通知表示
 
 #### プロンプト階層管理
@@ -199,7 +214,26 @@ DOCUMENT_TYPE_TO_PURPOSE_MAPPING = {
 #### 統計データ分析
 - 時系列での使用状況追跡
 - モデル別・診療科別・医師別の詳細分析
-- トークン使用量とコスト管理
+- トークン使用量と処理時間の管理
+
+## デプロイメント
+
+### Herokuデプロイ
+このアプリケーションはHerokuへのデプロイに対応しています。
+
+1. Heroku CLIをインストール
+2. Herokuアプリを作成
+3. PostgreSQLアドオンを追加
+4. 環境変数を設定
+5. デプロイ実行
+
+```bash
+heroku create your-app-name
+heroku addons:create heroku-postgresql:mini
+heroku config:set CLAUDE_API_KEY=your_key
+heroku config:set GEMINI_CREDENTIALS=your_key
+git push heroku main
+```
 
 ## トラブルシューティング
 
@@ -217,7 +251,7 @@ DOCUMENT_TYPE_TO_PURPOSE_MAPPING = {
 
 #### トークン数超過エラー
 - 入力テキストの長さを調整
-- `MAX_CHARACTER_THRESHOLD`の値を調整
+- `MAX_TOKEN_THRESHOLD`の値を調整
 - Gemini APIを有効にして自動切り替えを利用
 
 ### パフォーマンス最適化
