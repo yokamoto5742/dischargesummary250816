@@ -270,7 +270,7 @@ class TestBaseAPIClient:
              patch('external_service.base_api.get_prompt_manager') as mock_get_manager, \
              patch.object(self.client, 'create_summary_prompt') as mock_create_prompt, \
              patch.object(self.client, '_generate_content') as mock_generate, \
-             patch('external_service.base_api.DEFAULT_DOCUMENT_TYPE', '入院時サマリ'):
+             patch('external_service.base_api.DEFAULT_DOCUMENT_TYPE', '退院時サマリ'):
             
             mock_init.return_value = True
             mock_manager = Mock()
@@ -280,8 +280,7 @@ class TestBaseAPIClient:
             mock_generate.return_value = ("Summary", 100, 200)
             
             self.client.generate_summary("medical_text")
-            
-            # create_summary_prompt should receive doctor parameter but not include it in the call
+
             mock_create_prompt.assert_called_once_with(
-                "medical_text", "", "", "default", "入院時サマリ"
+                "medical_text", "", "", "default", "退院時サマリ"
             )
