@@ -233,9 +233,13 @@ class TestBaseAPIClient:
 
     def test_generate_summary_create_prompt_exception(self):
         with patch.object(self.client, 'initialize') as mock_init, \
+             patch('external_service.base_api.get_prompt_manager') as mock_get_manager, \
              patch.object(self.client, 'create_summary_prompt') as mock_create_prompt:
             
             mock_init.return_value = True
+            mock_manager = Mock()
+            mock_manager.get_prompt.side_effect = Exception("Prompt creation failed")
+            mock_get_manager.return_value = mock_manager
             mock_create_prompt.side_effect = Exception("Prompt creation failed")
             
             with pytest.raises(APIError) as exc_info:
@@ -245,10 +249,14 @@ class TestBaseAPIClient:
 
     def test_generate_summary_generate_content_exception(self):
         with patch.object(self.client, 'initialize') as mock_init, \
+             patch('external_service.base_api.get_prompt_manager') as mock_get_manager, \
              patch.object(self.client, 'create_summary_prompt') as mock_create_prompt, \
              patch.object(self.client, '_generate_content') as mock_generate:
             
             mock_init.return_value = True
+            mock_manager = Mock()
+            mock_manager.get_prompt.return_value = {"content": "test prompt"}
+            mock_get_manager.return_value = mock_manager
             mock_create_prompt.return_value = "Generated prompt"
             mock_generate.side_effect = Exception("Content generation failed")
             
@@ -259,11 +267,15 @@ class TestBaseAPIClient:
 
     def test_generate_summary_with_default_document_type(self):
         with patch.object(self.client, 'initialize') as mock_init, \
+             patch('external_service.base_api.get_prompt_manager') as mock_get_manager, \
              patch.object(self.client, 'create_summary_prompt') as mock_create_prompt, \
              patch.object(self.client, '_generate_content') as mock_generate, \
              patch('external_service.base_api.DEFAULT_DOCUMENT_TYPE', '入院時サマリ'):
             
             mock_init.return_value = True
+            mock_manager = Mock()
+            mock_manager.get_prompt.return_value = {"content": "test prompt"}
+            mock_get_manager.return_value = mock_manager
             mock_create_prompt.return_value = "Generated prompt"
             mock_generate.return_value = ("Summary", 100, 200)
             

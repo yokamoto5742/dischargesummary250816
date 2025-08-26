@@ -229,7 +229,17 @@ class TestUsageStatisticsRepository:
 
     def test_save_usage_success(self):
         mock_session = Mock()
-        usage_data = {"field": "value"}
+        usage_data = {
+            "app_type": "test_app",
+            "document_types": "退院時サマリ",
+            "model_detail": "gpt-4",
+            "department": "内科",
+            "doctor": "田中医師",
+            "input_tokens": 100,
+            "output_tokens": 200,
+            "total_tokens": 300,
+            "processing_time": 5000
+        }
         
         self.mock_session_factory.return_value.__enter__ = Mock(return_value=mock_session)
         self.mock_session_factory.return_value.__exit__ = Mock(return_value=None)

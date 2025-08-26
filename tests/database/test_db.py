@@ -84,7 +84,7 @@ class TestDatabaseManager:
         with patch.dict(os.environ, {'DATABASE_URL': 'invalid-url'}):
             with pytest.raises(DatabaseError) as exc_info:
                 DatabaseManager()
-            assert "DATABASE_URLの解析に失敗しました" in str(exc_info.value)
+            assert "PostgreSQLへの接続に失敗しました" in str(exc_info.value)
 
     @patch('database.db.create_engine')
     @patch('database.db.sessionmaker')

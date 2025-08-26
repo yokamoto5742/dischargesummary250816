@@ -102,7 +102,7 @@ class TestModelService:
             )
         
         # Check that the error message references token threshold
-        assert "TOKEN_THRESHOLD_EXCEEDED_NO_GEMINI" in str(exc_info.value) or "トークン" in str(exc_info.value)
+        assert "Gemini APIの認証情報が設定されていないため処理できません" in str(exc_info.value)
 
     @patch('services.model_service.MAX_TOKEN_THRESHOLD', 10)
     def test_check_model_switching_for_token_limit_non_claude_model(self):

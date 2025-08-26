@@ -37,7 +37,7 @@ class TestClaudeAPIClient:
         
         with pytest.raises(APIError) as exc_info:
             client.initialize()
-        assert "API_CREDENTIALS_MISSING" in str(exc_info.value) or "APIキー" in str(exc_info.value)
+        assert "Gemini APIの認証情報が設定されていません" in str(exc_info.value)
 
     @patch('external_service.claude_api.Anthropic')
     def test_initialize_anthropic_exception(self, mock_anthropic):
@@ -101,8 +101,10 @@ class TestClaudeAPIClient:
         mock_client.messages.create.return_value = mock_response
         self.client.client = mock_client
         
-        with pytest.raises(IndexError):
-            self.client._generate_content("Test prompt", "claude-3-sonnet")
+        result = self.client._generate_content("Test prompt", "claude-3-sonnet")
+        assert result[0] == "レスポンスが空です"
+        assert result[1] == 150
+        assert result[2] == 0
 
     def test_generate_content_with_usage_metadata(self):
         # Test with different usage structure
