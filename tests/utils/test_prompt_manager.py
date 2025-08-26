@@ -1,11 +1,11 @@
 import datetime
-import pytest
 from unittest.mock import Mock, patch
-from typing import Dict, Any, List
 
-from utils.prompt_manager import PromptManager, get_prompt_manager
+import pytest
+
 from database.repositories import PromptRepository
 from utils.exceptions import DatabaseError, AppError
+from utils.prompt_manager import PromptManager, get_prompt_manager
 
 
 class TestPromptManager:
@@ -264,7 +264,7 @@ class TestPromptManager:
     @patch('utils.prompt_manager.DOCUMENT_TYPES', ['type1', 'type2'])
     @patch('utils.prompt_manager.datetime')
     def test_initialize_all_prompts_success(self, mock_datetime):
-        mock_now = datetime.datetime(2023, 1, 1, 12, 0, 0)
+        mock_now = datetime.datetime(2023, 1, 1, 12)
         mock_datetime.datetime.now.return_value = mock_now
         
         self.prompt_manager.initialize_all_prompts()

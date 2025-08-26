@@ -1,10 +1,10 @@
 import datetime
-import pytest
-from unittest.mock import Mock, patch, MagicMock
-from typing import List, Dict, Any, Optional
+from unittest.mock import Mock, patch
 
+import pytest
+
+from database.models import Prompt, AppSetting
 from database.repositories import BaseRepository, PromptRepository, UsageStatisticsRepository, SettingsRepository
-from database.models import Prompt, SummaryUsage, AppSetting
 from utils.exceptions import DatabaseError
 
 
@@ -88,7 +88,7 @@ class TestPromptRepository:
 
     @patch('database.repositories.datetime')
     def test_create_or_update_new_prompt(self, mock_datetime):
-        mock_now = datetime.datetime(2023, 1, 1, 12, 0, 0)
+        mock_now = datetime.datetime(2023, 1, 1, 12)
         mock_datetime.datetime.now.return_value = mock_now
         
         mock_session = Mock()
@@ -111,7 +111,7 @@ class TestPromptRepository:
 
     @patch('database.repositories.datetime')
     def test_create_or_update_existing_prompt(self, mock_datetime):
-        mock_now = datetime.datetime(2023, 1, 1, 12, 0, 0)
+        mock_now = datetime.datetime(2023, 1, 1, 12)
         mock_datetime.datetime.now.return_value = mock_now
         
         mock_session = Mock()
@@ -335,7 +335,7 @@ class TestSettingsRepository:
 
     @patch('database.repositories.datetime')
     def test_save_user_settings_new(self, mock_datetime):
-        mock_now = datetime.datetime(2023, 1, 1, 12, 0, 0)
+        mock_now = datetime.datetime(2023, 1, 1, 12)
         mock_datetime.datetime.now.return_value = mock_now
         
         mock_session = Mock()
@@ -356,7 +356,7 @@ class TestSettingsRepository:
 
     @patch('database.repositories.datetime')
     def test_save_user_settings_existing(self, mock_datetime):
-        mock_now = datetime.datetime(2023, 1, 1, 12, 0, 0)
+        mock_now = datetime.datetime(2023, 1, 1, 12)
         mock_datetime.datetime.now.return_value = mock_now
         
         mock_session = Mock()
@@ -427,7 +427,7 @@ class TestSettingsRepository:
         self.mock_session_factory.return_value.__enter__ = Mock(return_value=mock_session)
         self.mock_session_factory.return_value.__exit__ = Mock(return_value=None)
         
-        result = self.repo.get_settings_by_app_type(None)
+        result = self.repo.get_settings_by_app_type()
         
         assert result == mock_settings
         mock_query.filter.assert_not_called()

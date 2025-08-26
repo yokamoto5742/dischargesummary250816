@@ -1,6 +1,6 @@
-import pytest
 from unittest.mock import Mock, patch
-from abc import ABC
+
+import pytest
 
 from external_service.base_api import BaseAPIClient
 from utils.exceptions import APIError
@@ -13,7 +13,7 @@ class ConcreteAPIClient(BaseAPIClient):
         return True if self.api_key else False
     
     def _generate_content(self, prompt: str, model_name: str):
-        return ("Generated content", 100, 200)
+        return "Generated content", 100, 200
 
 
 class TestBaseAPIClient:
@@ -85,11 +85,7 @@ class TestBaseAPIClient:
             mock_manager.get_prompt.return_value = {"content": "Template"}
             mock_get_manager.return_value = mock_manager
             
-            result = self.client.create_summary_prompt(
-                "Medical text",
-                current_prescription="",
-                additional_info="Additional info"
-            )
+            result = self.client.create_summary_prompt("Medical text", additional_info="Additional info")
             
             # Should not include prescription section when empty
             assert "【現在の処方】" not in result

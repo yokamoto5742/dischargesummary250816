@@ -1,5 +1,6 @@
+from unittest.mock import Mock, patch
+
 import pytest
-from unittest.mock import Mock, patch, MagicMock
 
 from external_service.claude_api import ClaudeAPIClient
 from utils.exceptions import APIError

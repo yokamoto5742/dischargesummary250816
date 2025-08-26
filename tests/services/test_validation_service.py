@@ -1,5 +1,6 @@
+from unittest.mock import patch
+
 import pytest
-from unittest.mock import patch, Mock
 
 from services.validation_service import ValidationService
 from utils.exceptions import APIError

@@ -1,7 +1,7 @@
 import os
+from unittest.mock import Mock, patch
+
 import pytest
-from unittest.mock import Mock, patch, MagicMock
-from sqlalchemy.pool import QueuePool
 
 from database.db import DatabaseManager, get_prompt_repository, get_usage_statistics_repository, get_settings_repository
 from database.repositories import PromptRepository, UsageStatisticsRepository, SettingsRepository

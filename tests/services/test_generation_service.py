@@ -1,11 +1,9 @@
+import datetime
 import queue
 import threading
-import pytest
-from unittest.mock import Mock, patch, MagicMock
-import datetime
+from unittest.mock import Mock, patch
 
 from services.generation_service import GenerationService
-from utils.exceptions import APIError
 
 
 class TestGenerationService:
