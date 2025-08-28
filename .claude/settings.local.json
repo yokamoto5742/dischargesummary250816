@@ -4,7 +4,13 @@
       "Bash(mkdir:*)",
       "Bash(python -m pytest tests/ -v)",
       "Bash(python -m pytest --version)",
-      "Bash(windows-notify:*)"
+      "Bash(windows-notify:*)",
+      "Bash(python -m pytest tests/ -v --tb=short)",
+      "Bash(python3 -m pytest tests/ -v --tb=short)",
+      "Bash(py -m pytest tests/ -v --tb=short)",
+      "Bash(py -c \"import pytest; print(pytest.__version__)\")",
+      "Bash(.venvScriptspytest.exe tests/ -v --tb=short)",
+      "Bash(\"C:/Users/yokam/PycharmProjects/MediDocsLMsummary/.venv/Scripts/pytest.exe\" tests/ -v --tb=short)"
     ],
     "deny": [],
     "ask": []
