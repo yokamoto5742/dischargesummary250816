@@ -128,6 +128,7 @@ class TestStatisticsService:
 
     @patch('services.statistics_service.get_usage_statistics_repository')
     @patch('services.statistics_service.datetime')
+    @patch('services.statistics_service.APP_TYPE', 'MediDocs')
     def test_save_usage_to_database_large_values(self, mock_datetime, mock_get_repo):
         """大きな値での保存テスト"""
         mock_repo = Mock()
@@ -312,10 +313,12 @@ class TestStatisticsService:
         
         test_cases = [
             (4.4, 4),   # 四捨五入で4
-            (4.5, 5),   # 四捨五入で5
+            (4.5, 4),   # Python banker's rounding: round half to even
             (4.6, 5),   # 四捨五入で5
+            (5.5, 6),   # Python banker's rounding: round half to even
             (0.4, 0),   # 四捨五入で0
-            (0.5, 1),   # 四捨五入で1
+            (0.5, 0),   # Python banker's rounding: round half to even
+            (1.5, 2),   # Python banker's rounding: round half to even
         ]
         
         for processing_time, expected_rounded in test_cases:

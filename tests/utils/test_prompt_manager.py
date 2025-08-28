@@ -296,6 +296,18 @@ class TestPromptManager:
 
 class TestGetPromptManager:
     
+    def setup_method(self):
+        with patch('utils.prompt_manager.get_prompt_repository') as mock_get_repo, \
+             patch('utils.prompt_manager.get_config') as mock_get_config:
+            
+            mock_repo = Mock(spec=PromptRepository)
+            mock_get_repo.return_value = mock_repo
+            mock_config = {'PROMPTS': {'summary': 'Default prompt content'}}
+            mock_get_config.return_value = mock_config
+            
+            self.prompt_manager = PromptManager()
+            self.mock_repo = mock_repo
+    
     def test_get_prompt_manager_singleton(self):
         # Reset the global variable
         import utils.prompt_manager

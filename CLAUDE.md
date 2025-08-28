@@ -12,6 +12,9 @@ The application will be available at `http://localhost:8501`
 
 ### Testing
 ```bash
+# Run all tests
+python -m pytest tests/ -v
+
 # Run all tests with coverage
 python -m pytest tests/ -v --cov=. --cov-report=html
 

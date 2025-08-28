@@ -54,10 +54,14 @@ class TestSummaryService:
     def test_process_summary_validation_error(self):
         """入力検証エラーのテスト"""
         with patch('services.summary_service.ValidationService.validate_inputs', 
-                  side_effect=ValueError("入力が無効です")):
+                  side_effect=ValueError("入力が無効です")), \
+             patch('streamlit.error') as mock_st_error:
             
-            with pytest.raises(ValueError, match="入力が無効です"):
-                SummaryService.process_summary("")
+            result = SummaryService.process_summary("")
+            
+            # @handle_error decorator catches the exception and shows streamlit error
+            assert result is None
+            mock_st_error.assert_called_once_with("予期しないエラー: 入力が無効です")
 
     def test_get_session_parameters_default_values(self):
         """セッションパラメータのデフォルト値テスト"""
@@ -230,8 +234,12 @@ class TestSummaryService:
             mock_thread.join.assert_called_once()
             
             # 結果が正しく処理されたかチェック
-            expected_result = mock_result.copy()
-            expected_result["processing_time"] = 5.0
+            expected_result = {
+                "success": True,
+                "summary": "生成されたサマリ",
+                "model_used": "claude",
+                "processing_time": 5.0
+            }
             assert result == expected_result
             
             # セッション状態が更新されたかチェック
