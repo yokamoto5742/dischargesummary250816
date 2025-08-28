@@ -87,3 +87,14 @@ This is a Streamlit-based medical document generation application that uses AI A
 - Mock-based testing for external APIs
 - Database testing with in-memory SQLite
 - Coverage reporting via pytest-cov
+
+## 通知設定
+
+タスク完了時には必ず通知を実行してください。通知メッセージは実行内容を明確に伝える内容にすること。
+通知メッセージは**具体的な作業内容**を含めること
+
+### 実行コマンド
+
+```bash
+windows-notify -t "Claude Code" -m "実行したタスクの詳細な説明"`
+```

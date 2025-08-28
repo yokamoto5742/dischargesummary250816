@@ -3,7 +3,8 @@
     "allow": [
       "Bash(mkdir:*)",
       "Bash(python -m pytest tests/ -v)",
-      "Bash(python -m pytest --version)"
+      "Bash(python -m pytest --version)",
+      "Bash(windows-notify:*)"
     ],
     "deny": [],
     "ask": []
