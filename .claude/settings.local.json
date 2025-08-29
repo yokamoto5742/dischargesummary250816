@@ -10,7 +10,8 @@
       "Bash(py -m pytest tests/ -v --tb=short)",
       "Bash(py -c \"import pytest; print(pytest.__version__)\")",
       "Bash(.venvScriptspytest.exe tests/ -v --tb=short)",
-      "Bash(\"C:/Users/yokam/PycharmProjects/MediDocsLMsummary/.venv/Scripts/pytest.exe\" tests/ -v --tb=short)"
+      "Bash(\"C:/Users/yokam/PycharmProjects/MediDocsLMsummary/.venv/Scripts/pytest.exe\" tests/ -v --tb=short)",
+      "Bash(python -m pytest tests/services/test_summary_service.py::TestSummaryService::test_execute_summary_generation_with_ui tests/utils/test_text_processor.py::TestTextProcessor::test_parse_output_summary_inline_content -v)"
     ],
     "deny": [],
     "ask": []

@@ -195,6 +195,12 @@ class TestSummaryService:
         mock_end_time = datetime.datetime(2024, 1, 1, 12, 0, 5)
         mock_datetime.now.side_effect = [mock_start_time, mock_end_time]
         
+        # total_seconds()の戻り値をモック
+        mock_timedelta = Mock()
+        mock_timedelta.total_seconds.return_value = 5.0
+        mock_datetime.__sub__ = Mock(return_value=mock_timedelta)
+        mock_end_time.__sub__ = Mock(return_value=mock_timedelta)
+        
         mock_queue = Mock()
         mock_result = {
             "success": True,

@@ -35,7 +35,7 @@ def parse_output_summary(summary_text):
         for section in DEFAULT_SECTION_NAMES:
             if line == section or (line.startswith(section) and len(line.replace(section, "").strip()) < 100):
                 current_section = section
-                content = line.replace(section, "").strip()
+                content = line.replace(section, "").replace(":", "").replace("：", "").strip()
                 if content:
                     sections[current_section] = content
                 found_section = True
