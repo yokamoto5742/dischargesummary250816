@@ -1,5 +1,5 @@
-import pytest
 from unittest.mock import patch
+
 from utils.text_processor import parse_output_summary, format_output_summary, section_aliases
 
 
@@ -193,8 +193,8 @@ ACE阻害薬を処方"""
 
         result = parse_output_summary(summary_text)
 
-        assert result["患者情報"] == ":\n田中三郎 55歳 男性"
-        assert result["主病名"] == "：\n狭心症"
+        assert result["患者情報"] == "田中三郎 55歳 男性"
+        assert result["主病名"] == "狭心症"
         assert result["症状経過"] == "胸部圧迫感\n運動時息切れ"
 
     def test_parse_output_summary_edge_case_long_section_content(self):
