@@ -149,6 +149,24 @@ DEFAULT_SECTION_NAMES = [
 
 ## 開発者向け情報
 
+### 開発・テスト環境
+```bash
+# テスト実行
+python -m pytest tests/ -v
+
+# カバレッジ付きテスト
+python -m pytest tests/ -v --cov=. --cov-report=html
+
+# 手動通知機能
+powershell -Command "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.MessageBox]::Show('タスクが完了しました', 'Claude Code', 'OK', 'Information')"
+```
+
+### 自動通知システム
+プロジェクトには自動通知のhooksが設定済み：
+- **Stop Hook**: Claude Code停止時に「作業が完了しました」
+- **SessionEnd Hook**: セッション終了時に通知
+- 設定ファイル: `.claude/settings.local.json`
+
 ### プロジェクト構造
 ```
 ├── app.py                        # メインアプリケーション
@@ -215,6 +233,19 @@ DEFAULT_SECTION_NAMES = [
 - 時系列での使用状況追跡
 - モデル別・診療科別・医師別の詳細分析
 - トークン使用量と処理時間の管理
+
+### テスト状況
+- **✅ 全248テスト通過** (2025-01-29現在)
+- 最近修正されたテスト:
+  - `tests/services/test_summary_service.py` - datetime mocking問題を解決
+  - `tests/utils/test_text_processor.py` - inline content parsing issue解決
+- カバレッジレポート利用可能
+
+### 開発者体験向上
+- **自動通知システム**: 作業完了時のデスクトップ通知
+- **hooks設定**: Claude Code終了時の自動通知
+- **手動通知**: 任意のタイミングでの通知実行
+- **統合開発環境**: CLAUDE.md による開発コマンド整備
 
 ## デプロイメント
 

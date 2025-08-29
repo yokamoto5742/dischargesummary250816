@@ -11,9 +11,38 @@
       "Bash(py -c \"import pytest; print(pytest.__version__)\")",
       "Bash(.venvScriptspytest.exe tests/ -v --tb=short)",
       "Bash(\"C:/Users/yokam/PycharmProjects/MediDocsLMsummary/.venv/Scripts/pytest.exe\" tests/ -v --tb=short)",
-      "Bash(python -m pytest tests/services/test_summary_service.py::TestSummaryService::test_execute_summary_generation_with_ui tests/utils/test_text_processor.py::TestTextProcessor::test_parse_output_summary_inline_content -v)"
+      "Bash(python -m pytest tests/services/test_summary_service.py::TestSummaryService::test_execute_summary_generation_with_ui tests/utils/test_text_processor.py::TestTextProcessor::test_parse_output_summary_inline_content -v)",
+      "Bash(claude config --help)",
+      "Bash(claude config list)",
+      "Bash(powershell:*)",
+      "Bash(claude config get hooks)",
+      "Bash(dir:*)"
     ],
     "deny": [],
     "ask": []
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -Command \"Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.MessageBox]::Show('作業が完了しました', 'Claude Code', 'OK', 'Information')\""
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "matcher": "*", 
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -Command \"Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.MessageBox]::Show('Claude Code セッションが終了しました', 'Claude Code', 'OK', 'Information')\""
+          }
+        ]
+      }
+    ]
   }
 }

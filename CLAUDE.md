@@ -36,6 +36,30 @@ pip install -r requirements.txt
 # See docs/README.md for required variables
 ```
 
+### Notifications
+
+#### Manual Notifications
+```bash
+# Show desktop notification when task completes
+powershell -Command "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.MessageBox]::Show('タスクが完了しました', 'Claude Code', 'OK', 'Information')"
+```
+
+#### Automatic Notifications (Hooks)
+自動通知はプロジェクトの `.claude/settings.local.json` で設定済みです：
+
+- **Stop Hook**: ユーザーがClaude Codeを停止した時に「作業が完了しました」と通知
+- **SessionEnd Hook**: セッション終了時に「Claude Code セッションが終了しました」と通知
+
+設定ファイル: `.claude/settings.local.json`
+```json
+{
+  "hooks": {
+    "Stop": [...],
+    "SessionEnd": [...]
+  }
+}
+```
+
 ## Architecture Overview
 
 This is a Streamlit-based medical document generation application that uses AI APIs (Claude/Gemini) to create discharge summaries and medical histories from medical records.
