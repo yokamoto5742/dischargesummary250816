@@ -33,6 +33,17 @@
         ]
       }
     ],
+    "SubagentStop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -Command \"Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.MessageBox]::Show('作業が完了しました', 'Claude Code', 'OK', 'Information')\""
+          }
+        ]
+      }
+    ],
     "SessionEnd": [
       {
         "matcher": "*", 
