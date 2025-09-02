@@ -58,3 +58,4 @@ MIN_INPUT_TOKENS = int(os.environ.get("MIN_INPUT_TOKENS", "100"))
 MAX_TOKEN_THRESHOLD = int(os.environ.get("MAX_TOKEN_THRESHOLD", "100000"))
 
 APP_TYPE = os.environ.get("APP_TYPE", "dischargesummary")
+PROMPT_MANAGEMENT = os.environ.get("PROMPT_MANAGEMENT", "True").lower() == "true"

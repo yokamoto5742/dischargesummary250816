@@ -16,12 +16,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Desktop notification system for task completion in CLAUDE.md
 - Automatic notification hooks system (.claude/settings.local.json)
 - Manual and automatic notification commands in development workflow
+- Environment variable `PROMPT_MANAGEMENT` to control prompt management button visibility
 
 ### Changed
 - Updated CLAUDE.md with notification system requirements
 - Enhanced development guidelines with specific notification commands
 - Added hooks configuration for Stop and SessionEnd events
 - Expanded notification section with manual vs automatic options
+- Modified `ui_components/navigation.py` to conditionally render prompt management button based on `PROMPT_MANAGEMENT` environment variable
+- Added `PROMPT_MANAGEMENT` configuration to `utils/config.py` with default value True
 
 ### Fixed
 - Fixed datetime mocking issue in summary service tests (tests/services/test_summary_service.py:243)
