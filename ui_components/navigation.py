@@ -111,7 +111,6 @@ def render_sidebar():
         st.session_state.available_models.append("Gemini_Pro")
     if GEMINI_FLASH_MODEL and GEMINI_CREDENTIALS:
         st.session_state.available_models.append("Gemini_Flash")
-    # Claude APIキーまたはBedrock経由で利用可能な場合
     if CLAUDE_AVAILABLE:
         st.session_state.available_models.append("Claude")
 

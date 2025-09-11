@@ -10,7 +10,6 @@ class ValidationService:
 
     @staticmethod
     def validate_api_credentials() -> None:
-        # ClaudeがAPI KeyまたはBedrock経由で利用可能、またはGeminiが利用可能
         if not any([GEMINI_CREDENTIALS, CLAUDE_AVAILABLE]):
             raise APIError(MESSAGES["NO_API_CREDENTIALS"])
 
@@ -37,7 +36,7 @@ class ValidationService:
     @staticmethod
     def validate_api_credentials_for_provider(provider: str) -> None:
         credentials_check = {
-            "claude": CLAUDE_AVAILABLE,  # API KeyまたはBedrock経由
+            "claude": CLAUDE_AVAILABLE,
             "gemini": GEMINI_CREDENTIALS,
         }
 
