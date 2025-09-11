@@ -128,12 +128,12 @@ class TestModelService:
         assert result[0] == "Claude"
         assert result[1] is False
 
-    @patch('services.model_service.CLAUDE_MODEL', "claude-3-sonnet")
+    @patch('services.model_service.ANTHROPIC_MODEL', "apac.anthropic.claude-sonnet-4-20250514-v1:0")
     @patch('services.model_service.GEMINI_MODEL', "gemini-pro")
     @patch('services.model_service.GEMINI_FLASH_MODEL', "gemini-flash")
     def test_get_provider_and_model_all_options(self):
         test_cases = [
-            ("Claude", ("claude", "claude-3-sonnet")),
+            ("Claude", ("claude", "apac.anthropic.claude-sonnet-4-20250514-v1:0")),
             ("Gemini_Pro", ("gemini", "gemini-pro")),
             ("Gemini_Flash", ("gemini", "gemini-flash"))
         ]

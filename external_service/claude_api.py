@@ -5,7 +5,6 @@ from anthropic import AnthropicBedrock
 from dotenv import load_dotenv
 
 from external_service.base_api import BaseAPIClient
-from utils.config import CLAUDE_MODEL
 from utils.constants import MESSAGES
 from utils.exceptions import APIError
 
@@ -18,7 +17,7 @@ class ClaudeAPIClient(BaseAPIClient):
         self.aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
         self.aws_region = os.getenv("AWS_REGION", "us-east-1")
 
-        self.bedrock_model = os.getenv("ANTHROPIC_MODEL", CLAUDE_MODEL)
+        self.bedrock_model = os.getenv("ANTHROPIC_MODEL")
 
         # AWS認証情報が存在する場合、それをapi_keyとして扱う（互換性のため）
         api_key = "bedrock" if all([self.aws_access_key_id, self.aws_secret_access_key]) else None

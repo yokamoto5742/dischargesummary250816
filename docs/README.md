@@ -29,10 +29,10 @@
 - Python 3.11以上
 - PostgreSQL 16以上
 
-### 必要なAPIキー
-以下のいずれか1つ以上のAPIキーが必要です：
-- **Claude API**: Anthropic
-- **Gemini API**: Google AI Studio
+### 必要な認証情報
+以下のいずれか1つ以上の認証情報が必要です：
+- **Amazon Bedrock + Claude**: AWS認証情報（AWS Access Key ID, Secret Access Key）
+- **Gemini API**: Google AI Studio APIキー
 
 ## インストール手順
 
@@ -62,9 +62,11 @@ pip install -r requirements.txt
 DATABASE_URL=postgresql://username:password@localhost:5432/database_name
 
 # AI API設定（いずれか1つ以上設定）
-# Claude API
-CLAUDE_API_KEY=your_claude_api_key
-CLAUDE_MODEL=claude-3-5-sonnet-20241022
+# Amazon Bedrock + Claude
+AWS_ACCESS_KEY_ID=your_aws_access_key_id
+AWS_SECRET_ACCESS_KEY=your_aws_secret_access_key
+AWS_REGION=ap-northeast-1
+ANTHROPIC_MODEL=apac.anthropic.claude-sonnet-4-20250514-v1:0
 
 # Gemini API
 GEMINI_CREDENTIALS=your_gemini_api_key
@@ -261,7 +263,10 @@ powershell -Command "Add-Type -AssemblyName System.Windows.Forms; [System.Window
 ```bash
 heroku create your-app-name
 heroku addons:create heroku-postgresql:mini
-heroku config:set CLAUDE_API_KEY=your_key
+heroku config:set AWS_ACCESS_KEY_ID=your_aws_access_key_id
+heroku config:set AWS_SECRET_ACCESS_KEY=your_aws_secret_access_key
+heroku config:set AWS_REGION=ap-northeast-1
+heroku config:set ANTHROPIC_MODEL=apac.anthropic.claude-sonnet-4-20250514-v1:0
 heroku config:set GEMINI_CREDENTIALS=your_key
 git push heroku main
 ```
