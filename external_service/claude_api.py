@@ -19,7 +19,6 @@ class ClaudeAPIClient(BaseAPIClient):
 
         self.bedrock_model = os.getenv("ANTHROPIC_MODEL")
 
-        # AWS認証情報が存在する場合、それをapi_keyとして扱う（互換性のため）
         api_key = "bedrock" if all([self.aws_access_key_id, self.aws_secret_access_key]) else None
 
         super().__init__(api_key, self.bedrock_model)
