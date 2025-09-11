@@ -49,8 +49,21 @@ GEMINI_MODEL = os.environ.get("GEMINI_MODEL")
 GEMINI_FLASH_MODEL = os.environ.get("GEMINI_FLASH_MODEL")
 GEMINI_THINKING_BUDGET = int(os.environ.get("GEMINI_THINKING_BUDGET")) if os.environ.get("GEMINI_THINKING_BUDGET") else None
 
+# AWS Bedrock認証情報
+AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY")
+AWS_REGION = os.environ.get("AWS_REGION", "us-east-1")
+ANTHROPIC_MODEL = os.environ.get("ANTHROPIC_MODEL")
+
+# Claude API設定（従来のAPIキーまたはBedrock経由）
 CLAUDE_API_KEY = os.environ.get("CLAUDE_API_KEY")
-CLAUDE_MODEL = os.environ.get("CLAUDE_MODEL")
+CLAUDE_MODEL = os.environ.get("CLAUDE_MODEL", ANTHROPIC_MODEL)
+
+# Bedrock経由でClaudeが利用可能かチェック
+CLAUDE_BEDROCK_AVAILABLE = all([AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, ANTHROPIC_MODEL])
+
+# ClaudeがAPI KeyまたはBedrock経由で利用可能かチェック
+CLAUDE_AVAILABLE = CLAUDE_API_KEY or CLAUDE_BEDROCK_AVAILABLE
 
 SELECTED_AI_MODEL = os.environ.get("SELECTED_AI_MODEL", "claude")
 MAX_INPUT_TOKENS = int(os.environ.get("MAX_INPUT_TOKENS", "300000"))
