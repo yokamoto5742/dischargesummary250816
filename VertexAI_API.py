@@ -9,7 +9,7 @@ load_dotenv()
 def main():
     project_id = os.getenv("GOOGLE_PROJECT_ID")
     location = os.getenv("GOOGLE_LOCATION")
-    model_name = os.getenv("GEMINI_MODEL")
+    model_name = os.getenv("GEMINI_FLASH_MODEL")
     api_key = os.getenv("GEMINI_CREDENTIALS")
 
     if not project_id:
