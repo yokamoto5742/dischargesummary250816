@@ -1,3 +1,8 @@
 .env
 project_structure.txt
 /.coverage
+
+__pycache__/
+*.pyc
+.idea/
+venv/
