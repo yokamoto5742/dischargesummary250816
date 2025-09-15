@@ -3,7 +3,7 @@ from google.genai import types
 from typing import Tuple
 
 from external_service.base_api import BaseAPIClient
-from utils.config import GEMINI_CREDENTIALS, GEMINI_MODEL, GEMINI_THINKING_BUDGET
+from utils.config import GEMINI_CREDENTIALS, GEMINI_MODEL, GEMINI_THINKING_BUDGET, GOOGLE_PROJECT_ID, GOOGLE_LOCATION
 from utils.constants import MESSAGES
 from utils.exceptions import APIError
 
@@ -15,13 +15,25 @@ class GeminiAPIClient(BaseAPIClient):
 
     def initialize(self) -> bool:
         try:
-            if self.api_key:
-                self.client = genai.Client(api_key=self.api_key)
-                return True
-            else:
-                raise APIError(MESSAGES["API_CREDENTIALS_MISSING"])
+            if not GOOGLE_PROJECT_ID:
+                raise APIError(MESSAGES["VERTEX_AI_PROJECT_MISSING"])
+            
+            if not GOOGLE_LOCATION:
+                raise APIError(MESSAGES["VERTEX_AI_LOCATION_MISSING"])
+            
+            if not self.api_key:
+                raise APIError(MESSAGES["VERTEX_AI_CREDENTIALS_MISSING"])
+            
+            self.client = genai.Client(
+                vertexai=True,
+                project=GOOGLE_PROJECT_ID,
+                location=GOOGLE_LOCATION,
+            )
+            return True
+        except APIError as e:
+            raise e
         except Exception as e:
-            raise APIError(f"Gemini API初期化エラー: {str(e)}")
+            raise APIError(f"Vertex AI Gemini API初期化エラー: {str(e)}")
 
     def _generate_content(self, prompt: str, model_name: str) -> Tuple[str, int, int]:
         if GEMINI_THINKING_BUDGET:

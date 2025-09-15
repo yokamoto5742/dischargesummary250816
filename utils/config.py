@@ -57,6 +57,9 @@ GEMINI_MODEL = os.environ.get("GEMINI_MODEL")
 GEMINI_FLASH_MODEL = os.environ.get("GEMINI_FLASH_MODEL")
 GEMINI_THINKING_BUDGET = int(os.environ.get("GEMINI_THINKING_BUDGET")) if os.environ.get("GEMINI_THINKING_BUDGET") else None
 
+GOOGLE_PROJECT_ID = os.environ.get("GOOGLE_PROJECT_ID")
+GOOGLE_LOCATION = os.environ.get("GOOGLE_LOCATION")
+
 SELECTED_AI_MODEL = os.environ.get("SELECTED_AI_MODEL", "claude")
 MAX_INPUT_TOKENS = int(os.environ.get("MAX_INPUT_TOKENS", "300000"))
 MIN_INPUT_TOKENS = int(os.environ.get("MIN_INPUT_TOKENS", "100"))

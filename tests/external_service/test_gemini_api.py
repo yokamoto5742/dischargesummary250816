@@ -9,7 +9,9 @@ class TestGeminiAPIClient:
     
     def setup_method(self):
         with patch('external_service.gemini_api.GEMINI_CREDENTIALS', 'fake_credentials'), \
-             patch('external_service.gemini_api.GEMINI_MODEL', 'gemini-pro'):
+             patch('external_service.gemini_api.GEMINI_MODEL', 'gemini-pro'), \
+             patch('external_service.gemini_api.GOOGLE_PROJECT_ID', 'gen-lang-client-0605794434'), \
+             patch('external_service.gemini_api.GOOGLE_LOCATION', 'us-west1'):
             self.client = GeminiAPIClient()
 
     def test_init(self):
@@ -29,7 +31,11 @@ class TestGeminiAPIClient:
         
         assert result is True
         assert self.client.client is mock_client_instance
-        mock_genai.Client.assert_called_once_with(api_key='fake_credentials')
+        mock_genai.Client.assert_called_once_with(
+            vertexai=True,
+            project='gen-lang-client-0605794434',
+            location='us-west1'
+        )
 
     def test_initialize_no_api_key(self):
         client = GeminiAPIClient()
@@ -37,7 +43,7 @@ class TestGeminiAPIClient:
         
         with pytest.raises(APIError) as exc_info:
             client.initialize()
-        assert "Gemini APIの認証情報が設定されていません" in str(exc_info.value)
+        assert "Vertex AI APIの認証情報が設定されていません" in str(exc_info.value)
 
     @patch('external_service.gemini_api.genai')
     def test_initialize_genai_exception(self, mock_genai):
@@ -45,7 +51,19 @@ class TestGeminiAPIClient:
         
         with pytest.raises(APIError) as exc_info:
             self.client.initialize()
-        assert "Gemini API初期化エラー" in str(exc_info.value)
+        assert "Vertex AI Gemini API初期化エラー" in str(exc_info.value)
+
+    @patch('external_service.gemini_api.GOOGLE_PROJECT_ID', None)
+    def test_initialize_no_project_id(self):
+        with pytest.raises(APIError) as exc_info:
+            self.client.initialize()
+        assert "GOOGLE_PROJECT_ID環境変数が設定されていません" in str(exc_info.value)
+
+    @patch('external_service.gemini_api.GOOGLE_LOCATION', None)
+    def test_initialize_no_location(self):
+        with pytest.raises(APIError) as exc_info:
+            self.client.initialize()
+        assert "GOOGLE_LOCATION環境変数が設定されていません" in str(exc_info.value)
 
     @patch('external_service.gemini_api.GEMINI_THINKING_BUDGET', None)
     def test_generate_content_without_thinking_budget(self):
@@ -173,6 +191,13 @@ class TestGeminiAPIClient:
         # Initialize the client
         result_init = self.client.initialize()
         assert result_init is True
+        
+        # Verify Vertex AI client was created correctly
+        mock_genai.Client.assert_called_once_with(
+            vertexai=True,
+            project='gen-lang-client-0605794434',
+            location='us-west1'
+        )
         
         # Generate content
         result_generate = self.client._generate_content("Test prompt", "gemini-pro")
