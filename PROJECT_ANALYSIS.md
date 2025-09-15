@@ -98,3 +98,47 @@ python -m pytest tests/ -v --cov=. --cov-report=html  # テスト実行
 | 設定管理 | ✅ 完了 | 環境変数、定数、設定ファイル把握済み |
 
 **結論**: プロジェクトの全体構造、技術的詳細、セキュリティ面を含めて完全に理解しました。医療現場向けの実用的で安全なシステムです。
+
+---
+
+## 🔄 変更履歴 (CHANGELOG)
+
+### 2025-01-28: ANTHROPIC API認証削除 - Amazon Bedrock専用化
+**目的**: ANTHROPICのAPIキー認証機能をすべて削除し、Amazon BedrockのClaude専用構成に変更
+
+#### 🛠️ 修正ファイル
+
+**設定・環境変数:**
+- `utils/config.py`:
+  - `CLAUDE_API_KEY` 完全削除
+  - `CLAUDE_MODEL` → `ANTHROPIC_MODEL` に統一
+  - `CLAUDE_AVAILABLE` をBedrock専用判定に変更
+
+**APIクライアント:**
+- `external_service/claude_api.py`:
+  - `CLAUDE_MODEL` インポート削除
+  - 直接 `ANTHROPIC_MODEL` 環境変数を使用
+  - AWS認証情報必須チェック強化
+
+**サービス層:**
+- `services/model_service.py`:
+  - `CLAUDE_MODEL` → `ANTHROPIC_MODEL` に変更
+  - プロバイダーマッピング更新
+
+**テスト更新:**
+- `tests/external_service/test_claude_api.py`: 完全書き直し
+  - AnthropicBedrock専用テストに変更
+  - AWS認証情報テストケース追加
+- `tests/services/test_validation_service.py`: `CLAUDE_API_KEY` → `CLAUDE_AVAILABLE`
+- `tests/services/test_model_service.py`: `CLAUDE_MODEL` → `ANTHROPIC_MODEL`
+
+**ドキュメント:**
+- `docs/README.md`:
+  - 必要な認証情報をAWS認証情報に変更
+  - Herokuデプロイ設定をAWS環境変数に更新
+- `utils/constants.py`: `CLAUDE_API_CREDENTIALS_MISSING` メッセージ削除
+
+#### ✅ 検証済み
+- 全テスト正常実行 (pytest)
+- ANTHROPIC直接API参照完全削除
+- Amazon Bedrock経由Claude専用動作確認

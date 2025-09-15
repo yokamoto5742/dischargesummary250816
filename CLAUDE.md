@@ -2,6 +2,22 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## House Rules:
+- 文章ではなくパッチの差分を返すこと。Return patch diffs, not prose.
+- 不明な点がある場合は、トレードオフを明記した2つの選択肢を提案すること（80語以内）。
+- 変更範囲は最小限に抑えること
+- Pythonコードのimport文は以下の適切な順序に並べ替えてください。
+標準ライブラリ
+サードパーティライブラリ
+カスタムモジュール 
+それぞれアルファベット順に並べます。importが先でfromは後です。
+
+## Automatic Notifications (Hooks)
+自動通知は`.claude/settings.local.json` で設定済：
+
+- **Stop Hook**: ユーザーがClaude Codeを停止した時に「作業が完了しました」と通知
+- **SessionEnd Hook**: セッション終了時に「Claude Code セッションが終了しました」と通知
+
 ## Development Commands
 
 ### Running the Application

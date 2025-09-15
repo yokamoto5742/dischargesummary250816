@@ -1,6 +1,6 @@
 from typing import Tuple
 
-from utils.config import (CLAUDE_MODEL, GEMINI_CREDENTIALS,
+from utils.config import (ANTHROPIC_MODEL, GEMINI_CREDENTIALS,
                           GEMINI_FLASH_MODEL, GEMINI_MODEL, MAX_TOKEN_THRESHOLD)
 from utils.constants import DEFAULT_DEPARTMENT, DOCUMENT_TYPES, MESSAGES
 from utils.exceptions import APIError
@@ -52,7 +52,7 @@ class ModelService:
     @staticmethod
     def get_provider_and_model(selected_model: str) -> Tuple[str, str]:
         provider_mapping = {
-            "Claude": ("claude", CLAUDE_MODEL),
+            "Claude": ("claude", ANTHROPIC_MODEL),
             "Gemini_Pro": ("gemini", GEMINI_MODEL),
             "Gemini_Flash": ("gemini", GEMINI_FLASH_MODEL),
         }
