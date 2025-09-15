@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Automatic notification hooks system (.claude/settings.local.json)
 - Manual and automatic notification commands in development workflow
 - Environment variable `PROMPT_MANAGEMENT` to control prompt management button visibility
+- **Vertex AI integration**: Added GOOGLE_PROJECT_ID and GOOGLE_LOCATION environment variables to config.py
+- **Vertex AI error handling**: Added comprehensive error messages for Vertex AI API initialization
 
 ### Changed
 - Updated CLAUDE.md with notification system requirements
@@ -25,11 +27,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Expanded notification section with manual vs automatic options
 - Modified `ui_components/navigation.py` to conditionally render prompt management button based on `PROMPT_MANAGEMENT` environment variable
 - Added `PROMPT_MANAGEMENT` configuration to `utils/config.py` with default value True
+- **Gemini API migration**: Updated gemini_api.py to use Vertex AI API instead of standard Gemini API
+- **Error message updates**: Updated all Gemini-related error messages to reflect Vertex AI usage
 
 ### Fixed
 - Fixed datetime mocking issue in summary service tests (tests/services/test_summary_service.py:243)
 - Fixed text processor inline content parsing issue with colon removal (utils/text_processor.py)
 - All unit tests now pass (248 tests, 2 previously failing tests resolved)
+- **Test compatibility**: Updated all Gemini API tests to work with new Vertex AI implementation
+- **Authentication flow**: Fixed API client initialization to properly validate Vertex AI credentials
 
 ## [Recent Updates] - 2025-01-28
 

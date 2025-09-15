@@ -142,3 +142,47 @@ python -m pytest tests/ -v --cov=. --cov-report=html  # テスト実行
 - 全テスト正常実行 (pytest)
 - ANTHROPIC直接API参照完全削除
 - Amazon Bedrock経由Claude専用動作確認
+
+---
+
+### 2025-01-XX: Vertex AI Gemini API統合完了
+
+**目的**: 標準Gemini APIからVertex AI APIへの移行を完了し、より安定したエンタープライズ向けAI統合を実現
+
+#### 🛠️ 修正ファイル
+
+**設定・環境変数:**
+- `utils/config.py`:
+  - `GOOGLE_PROJECT_ID` 環境変数追加
+  - `GOOGLE_LOCATION` 環境変数追加 
+  - Vertex AI用プロジェクト・リージョン設定対応
+
+**APIクライアント:**
+- `external_service/gemini_api.py`:
+  - `genai.Client()` を `genai.Client(vertexai=True)` に変更
+  - プロジェクトIDとロケーション必須検証追加
+  - Vertex AI専用エラーハンドリング実装
+
+**エラーメッセージ:**
+- `utils/constants.py`:
+  - `VERTEX_AI_PROJECT_MISSING`: プロジェクトID未設定エラー
+  - `VERTEX_AI_LOCATION_MISSING`: ロケーション未設定エラー
+  - `VERTEX_AI_CREDENTIALS_MISSING`: Vertex AI認証情報エラー
+
+**テスト更新:**
+- `tests/external_service/test_gemini_api.py`:
+  - Vertex AI Client初期化テストに更新
+  - プロジェクトID・ロケーション検証テスト追加
+  - 全17テストケースが正常動作確認
+
+#### 📋 技術的改善点
+- **エンタープライズ対応**: Vertex AIによる企業向け安定性向上
+- **地域最適化**: GOOGLE_LOCATIONによるレイテンシ最適化
+- **セキュリティ強化**: プロジェクトレベルでの認証・権限管理
+- **エラー処理強化**: より詳細なVertex AI専用エラーメッセージ
+
+#### ✅ 検証済み
+- 全69テスト正常実行 (external_service/ テストスイート)
+- Vertex AI Client初期化動作確認
+- scripts/VertexAI_API.py との整合性確認
+- エラーハンドリング網羅性検証完了

@@ -33,7 +33,7 @@ class GeminiAPIClient(BaseAPIClient):
         except APIError as e:
             raise e
         except Exception as e:
-            raise APIError(f"Vertex AI Gemini API初期化エラー: {str(e)}")
+            raise APIError(MESSAGES["VERTEX_AI_INIT_ERROR"].format(error=str(e)))
 
     def _generate_content(self, prompt: str, model_name: str) -> Tuple[str, int, int]:
         if GEMINI_THINKING_BUDGET:

@@ -47,6 +47,7 @@ MESSAGES = {
     "VERTEX_AI_PROJECT_MISSING": "⚠️ GOOGLE_PROJECT_ID環境変数が設定されていません。",
     "VERTEX_AI_LOCATION_MISSING": "⚠️ GOOGLE_LOCATION環境変数が設定されていません。",
     "VERTEX_AI_CREDENTIALS_MISSING": "⚠️ Vertex AI APIの認証情報が設定されていません。環境変数を確認してください。",
+    "VERTEX_AI_INIT_ERROR": "Vertex AI Gemini API初期化エラー: {error}",
     "COPY_INSTRUCTION": "💡 テキストエリアの右上にマウスを合わせて左クリックでコピーできます",
     "PROCESSING_TIME": "⏱️ 処理時間: {processing_time:.0f}秒",
 }
