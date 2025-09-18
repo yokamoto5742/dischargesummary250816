@@ -5,6 +5,28 @@ All notable changes to the MediDocsLMsummary project will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2025-01-29 - Vertex AI認証統合
+
+### Added
+- **Vertex AI認証システム**: Google Cloud Service Account JSON認証を実装
+- **新しい環境変数**: `GOOGLE_CREDENTIALS_JSON`, `GOOGLE_PROJECT_ID`, `GOOGLE_LOCATION`
+- **Google Cloud Service Account取得手順**: README.mdに詳細な設定手順を追加
+- **認証エラーハンドリング**: Service Account認証の包括的エラー処理
+- **段階的移行サポート**: 新旧認証方式の共存機能
+
+### Changed
+- **BREAKING CHANGE**: `GEMINI_CREDENTIALS` → `GOOGLE_CREDENTIALS_JSON`に変更
+- **認証方式変更**: Gemini API → Vertex AI完全移行
+- **環境変数設定**: 全ての設定例とドキュメントを新しい認証方式に更新
+- **Herokuデプロイ**: デプロイ手順を新しい環境変数に対応
+- **UI表示**: 認証状態チェックロジックを新しい変数に更新
+
+### Fixed
+- **テストスイート**: 全247テストが新しい認証方式に完全対応
+- **モックシステム**: Service Account認証のための新しいモック実装
+- **認証チェック**: 全サービスクラスの認証検証ロジック更新
+- **エラーメッセージ**: Vertex AI関連の日本語エラーメッセージ統一
+
 ## [Unreleased]
 
 ### Added
@@ -17,8 +39,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Automatic notification hooks system (.claude/settings.local.json)
 - Manual and automatic notification commands in development workflow
 - Environment variable `PROMPT_MANAGEMENT` to control prompt management button visibility
-- **Vertex AI integration**: Added GOOGLE_PROJECT_ID and GOOGLE_LOCATION environment variables to config.py
-- **Vertex AI error handling**: Added comprehensive error messages for Vertex AI API initialization
 
 ### Changed
 - Updated CLAUDE.md with notification system requirements
@@ -27,15 +47,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Expanded notification section with manual vs automatic options
 - Modified `ui_components/navigation.py` to conditionally render prompt management button based on `PROMPT_MANAGEMENT` environment variable
 - Added `PROMPT_MANAGEMENT` configuration to `utils/config.py` with default value True
-- **Gemini API migration**: Updated gemini_api.py to use Vertex AI API instead of standard Gemini API
-- **Error message updates**: Updated all Gemini-related error messages to reflect Vertex AI usage
 
 ### Fixed
 - Fixed datetime mocking issue in summary service tests (tests/services/test_summary_service.py:243)
 - Fixed text processor inline content parsing issue with colon removal (utils/text_processor.py)
-- All unit tests now pass (248 tests, 2 previously failing tests resolved)
-- **Test compatibility**: Updated all Gemini API tests to work with new Vertex AI implementation
-- **Authentication flow**: Fixed API client initialization to properly validate Vertex AI credentials
 
 ## [Recent Updates] - 2025-01-28
 

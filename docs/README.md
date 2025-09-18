@@ -254,8 +254,11 @@ powershell -Command "Add-Type -AssemblyName System.Windows.Forms; [System.Window
 - トークン使用量と処理時間の管理
 
 ### テスト状況
-- **✅ 全248テスト通過** (2025-01-29現在)
+- **✅ 全247テスト通過** (2025-01-29現在)
 - 最近修正されたテスト:
+  - `tests/external_service/test_gemini_api.py` - GOOGLE_CREDENTIALS_JSON認証対応
+  - `tests/services/test_model_service.py` - 認証情報変数名更新
+  - `tests/services/test_validation_service.py` - 認証チェック更新
   - `tests/services/test_summary_service.py` - datetime mocking問題を解決
   - `tests/utils/test_text_processor.py` - inline content parsing issue解決
 - カバレッジレポート利用可能
@@ -265,6 +268,36 @@ powershell -Command "Add-Type -AssemblyName System.Windows.Forms; [System.Window
 - **hooks設定**: Claude Code終了時の自動通知
 - **手動通知**: 任意のタイミングでの通知実行
 - **統合開発環境**: CLAUDE.md による開発コマンド整備
+
+## 変更履歴
+
+### v2.1.0 (2025-01-29) - Vertex AI認証統合
+#### 🔄 認証システム変更
+- **BREAKING CHANGE**: `GEMINI_CREDENTIALS` → `GOOGLE_CREDENTIALS_JSON`に変更
+- Google Cloud Service Account JSON認証に移行
+- 新規環境変数追加: `GOOGLE_PROJECT_ID`, `GOOGLE_LOCATION`
+- Vertex AI APIとの完全統合
+
+#### 🛠️ コード改善
+- `external_service/gemini_api.py`: Service Account認証ロジック実装
+- `utils/config.py`: 認証設定変数更新
+- `services/`: 全サービスクラスの認証チェック更新
+- `ui_components/navigation.py`: UI認証状態表示更新
+
+#### 🧪 テスト更新
+- 全247テストが新しい認証方式に対応
+- `test_gemini_api.py`: Service Accountモック実装
+- 認証関連テストケースの comprehensive更新
+
+#### 📚 ドキュメント更新
+- README.md: Google Cloud Service Account取得手順追加
+- 環境変数設定例更新
+- Herokuデプロイ手順更新
+- トラブルシューティング強化
+
+#### 🔧 後方互換性
+- 環境変数`GOOGLE_CREDENTIALS_JSON`未設定時は従来の認証方式を使用
+- 段階的移行をサポート
 
 ## デプロイメント
 
