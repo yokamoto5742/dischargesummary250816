@@ -9,8 +9,8 @@
 - 生成結果は「全文」「入院期間」「現病歴」「入院時検査」「入院中の治療経過」「退院申し送り」「備考」のタブ形式で表示
 
 ### 🤖 複数AIモデル対応
-- **Claude** (Anthropic)
-- **Gemini** (Google)
+- **Claude** (Anthropic Amazon Bedrock)
+- **Gemini** (Google Vertex AI)
 - 入力文字数に応じた自動モデル切り替え機能（Claude → Gemini Pro）
 
 ### ⚙️ カスタマイズ機能
@@ -32,7 +32,7 @@
 ### 必要な認証情報
 以下のいずれか1つ以上の認証情報が必要です：
 - **Amazon Bedrock + Claude**: AWS認証情報（AWS Access Key ID, Secret Access Key）
-- **Gemini API**: Google AI Studio APIキー
+- **Vertex AI + Gemini**: Google Cloud認証情報（Service Account JSON）
 
 ## インストール手順
 
@@ -54,7 +54,22 @@ venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 4. 環境変数の設定
+### 4. Google Cloud認証設定（Vertex AI使用時）
+Vertex AI + Geminiを使用する場合は、Google Cloud Service Accountを作成し、認証情報を取得します：
+
+1. [Google Cloud Console](https://console.cloud.google.com/)にアクセス
+2. プロジェクトを作成または選択
+3. 「APIとサービス」→「認証情報」に移動
+4. 「認証情報を作成」→「サービスアカウント」を選択
+5. サービスアカウント名を入力し、作成
+6. Vertex AI APIを有効化：「APIとサービス」→「ライブラリ」で「Vertex AI API」を検索し有効化
+7. 作成したサービスアカウントに以下の権限を付与：
+   - `Vertex AI User`
+   - `AI Platform Developer`
+8. 「キー」タブで「キーを追加」→「新しいキーを作成」→「JSON」を選択
+9. ダウンロードしたJSONファイルの内容を`GOOGLE_CREDENTIALS_JSON`環境変数に設定
+
+### 5. 環境変数の設定
 `.env`ファイルを作成し、以下の設定を行ってください：
 
 ```env
@@ -68,8 +83,10 @@ AWS_SECRET_ACCESS_KEY=your_aws_secret_access_key
 AWS_REGION=ap-northeast-1
 ANTHROPIC_MODEL=apac.anthropic.claude-sonnet-4-20250514-v1:0
 
-# Gemini API
-GOOGLE_CREDENTIALS_JSON=your_google_credentials_json
+# Vertex AI + Gemini API
+GOOGLE_CREDENTIALS_JSON='{"type":"service_account","project_id":"your-project","private_key_id":"...","private_key":"-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n","client_email":"your-service-account@your-project.iam.gserviceaccount.com","client_id":"...","auth_uri":"https://accounts.google.com/o/oauth2/auth","token_uri":"https://oauth2.googleapis.com/token"}'
+GOOGLE_PROJECT_ID=your-google-cloud-project-id
+GOOGLE_LOCATION=us-west1
 GEMINI_MODEL=gemini-2.0-flash-thinking-exp
 GEMINI_FLASH_MODEL=gemini-1.5-flash
 GEMINI_THINKING_BUDGET=10000
@@ -267,7 +284,9 @@ heroku config:set AWS_ACCESS_KEY_ID=your_aws_access_key_id
 heroku config:set AWS_SECRET_ACCESS_KEY=your_aws_secret_access_key
 heroku config:set AWS_REGION=ap-northeast-1
 heroku config:set ANTHROPIC_MODEL=apac.anthropic.claude-sonnet-4-20250514-v1:0
-heroku config:set GOOGLE_CREDENTIALS_JSON=your_google_credentials_json
+heroku config:set GOOGLE_CREDENTIALS_JSON='{"type":"service_account","project_id":"your-project",...}'
+heroku config:set GOOGLE_PROJECT_ID=your-google-cloud-project-id
+heroku config:set GOOGLE_LOCATION=us-west1
 git push heroku main
 ```
 
@@ -281,14 +300,17 @@ git push heroku main
 - データベースとユーザーの権限を確認
 
 #### API認証エラー
-- APIキーが正しく設定されているか確認
-- APIキーの有効期限と使用制限を確認
+- AWS認証情報（Access Key, Secret Key）が正しく設定されているか確認
+- Google Cloud Service Account JSONが正しく設定されているか確認
+- `GOOGLE_PROJECT_ID`と`GOOGLE_LOCATION`が設定されているか確認
+- Service AccountにVertex AI APIの権限が付与されているか確認
+- APIの有効期限と使用制限を確認
 - ネットワーク接続を確認
 
 #### トークン数超過エラー
 - 入力テキストの長さを調整
 - `MAX_TOKEN_THRESHOLD`の値を調整
-- Gemini APIを有効にして自動切り替えを利用
+- Vertex AI + Gemini APIを有効にして自動切り替えを利用
 
 ### パフォーマンス最適化
 
