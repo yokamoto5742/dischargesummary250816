@@ -78,7 +78,7 @@ class TestModelService:
         assert result == ("Claude", False, "Claude")
 
     @patch('services.model_service.MAX_TOKEN_THRESHOLD', 10)
-    @patch('services.model_service.GEMINI_CREDENTIALS', "fake_credentials")
+    @patch('services.model_service.GOOGLE_CREDENTIALS_JSON', "fake_credentials")
     @patch('services.model_service.GEMINI_MODEL', "gemini-pro")
     def test_check_model_switching_for_token_limit_switch_to_gemini(self):
         input_text = "very long text that exceeds the token limit"
@@ -91,7 +91,7 @@ class TestModelService:
         assert result == ("Gemini_Pro", True, "Claude")
 
     @patch('services.model_service.MAX_TOKEN_THRESHOLD', 10)
-    @patch('services.model_service.GEMINI_CREDENTIALS', None)
+    @patch('services.model_service.GOOGLE_CREDENTIALS_JSON', None)
     def test_check_model_switching_for_token_limit_no_gemini_available(self):
         input_text = "very long text that exceeds the token limit"
         additional_info = "additional information"
@@ -181,7 +181,7 @@ class TestModelService:
     # === 詳細なcheck_model_switching_for_token_limit()テスト ===
     
     @patch('services.model_service.MAX_TOKEN_THRESHOLD', 5000)
-    @patch('services.model_service.GEMINI_CREDENTIALS', "test_credentials")
+    @patch('services.model_service.GOOGLE_CREDENTIALS_JSON', "test_credentials")
     @patch('services.model_service.GEMINI_MODEL', "gemini-1.5-pro")
     def test_check_model_switching_claude_exceeds_threshold_with_gemini(self):
         """Claudeがトークン制限を超過し、Geminiが利用可能な場合のテスト"""
@@ -198,7 +198,7 @@ class TestModelService:
         assert result[2] == "Claude"  # 元のモデル
 
     @patch('services.model_service.MAX_TOKEN_THRESHOLD', 5000)
-    @patch('services.model_service.GEMINI_CREDENTIALS', None)
+    @patch('services.model_service.GOOGLE_CREDENTIALS_JSON', None)
     @patch('services.model_service.GEMINI_MODEL', None)
     def test_check_model_switching_claude_exceeds_threshold_no_gemini(self):
         """Claudeがトークン制限を超過し、Geminiが利用不可な場合のエラーテスト"""
@@ -267,7 +267,7 @@ class TestModelService:
         assert result[2] == "Claude"
 
     @patch('services.model_service.MAX_TOKEN_THRESHOLD', 50)
-    @patch('services.model_service.GEMINI_CREDENTIALS', "test_creds")
+    @patch('services.model_service.GOOGLE_CREDENTIALS_JSON', "test_creds")
     @patch('services.model_service.GEMINI_MODEL', "gemini-model")
     def test_check_model_switching_one_over_threshold(self):
         """しきい値を1文字超える場合のテスト"""
@@ -284,7 +284,7 @@ class TestModelService:
         assert result[2] == "Claude"
 
     @patch('services.model_service.MAX_TOKEN_THRESHOLD', 100)
-    @patch('services.model_service.GEMINI_CREDENTIALS', "test_creds")
+    @patch('services.model_service.GOOGLE_CREDENTIALS_JSON', "test_creds")
     @patch('services.model_service.GEMINI_MODEL', "gemini-model")
     def test_check_model_switching_additional_info_none(self):
         """additional_infoがNoneの場合のテスト"""
@@ -300,7 +300,7 @@ class TestModelService:
         assert result[2] == "Claude"
 
     @patch('services.model_service.MAX_TOKEN_THRESHOLD', 100)
-    @patch('services.model_service.GEMINI_CREDENTIALS', "test_creds")  
+    @patch('services.model_service.GOOGLE_CREDENTIALS_JSON', "test_creds")  
     @patch('services.model_service.GEMINI_MODEL', "gemini-model")
     def test_check_model_switching_combined_text_exceeds(self):
         """入力テキストと追加情報の合計でしきい値を超える場合のテスト"""
@@ -316,7 +316,7 @@ class TestModelService:
         assert result[2] == "Claude"
 
     @patch('services.model_service.MAX_TOKEN_THRESHOLD', 200)
-    @patch('services.model_service.GEMINI_CREDENTIALS', "")  # 空文字列
+    @patch('services.model_service.GOOGLE_CREDENTIALS_JSON', "")  # 空文字列
     @patch('services.model_service.GEMINI_MODEL', "gemini-model")
     def test_check_model_switching_empty_gemini_credentials(self):
         """Gemini認証情報が空文字列の場合のテスト"""
@@ -328,7 +328,7 @@ class TestModelService:
             )
 
     @patch('services.model_service.MAX_TOKEN_THRESHOLD', 200)
-    @patch('services.model_service.GEMINI_CREDENTIALS', "test_creds")
+    @patch('services.model_service.GOOGLE_CREDENTIALS_JSON', "test_creds")
     @patch('services.model_service.GEMINI_MODEL', "")  # 空文字列
     def test_check_model_switching_empty_gemini_model(self):
         """Geminiモデル名が空文字列の場合のテスト"""

@@ -1,6 +1,6 @@
 from typing import Tuple
 
-from utils.config import (ANTHROPIC_MODEL, GEMINI_CREDENTIALS,
+from utils.config import (ANTHROPIC_MODEL, GOOGLE_CREDENTIALS_JSON,
                           GEMINI_FLASH_MODEL, GEMINI_MODEL, MAX_TOKEN_THRESHOLD)
 from utils.constants import DEFAULT_DEPARTMENT, DOCUMENT_TYPES, MESSAGES
 from utils.exceptions import APIError
@@ -41,7 +41,7 @@ class ModelService:
         model_switched = False
 
         if selected_model == "Claude" and total_characters > MAX_TOKEN_THRESHOLD:
-            if GEMINI_CREDENTIALS and GEMINI_MODEL:
+            if GOOGLE_CREDENTIALS_JSON and GEMINI_MODEL:
                 selected_model = "Gemini_Pro"
                 model_switched = True
             else:

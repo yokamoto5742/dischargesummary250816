@@ -1,3 +1,4 @@
+import os
 import pytest
 from unittest.mock import Mock, patch
 
@@ -8,50 +9,58 @@ from utils.exceptions import APIError
 class TestGeminiAPIClient:
     
     def setup_method(self):
-        with patch('external_service.gemini_api.GEMINI_CREDENTIALS', 'fake_credentials'), \
+        # Using valid JSON for GOOGLE_CREDENTIALS_JSON
+        fake_credentials_json = '{"type": "service_account", "project_id": "test-project", "private_key_id": "test-key-id", "private_key": "-----BEGIN PRIVATE KEY-----\\ntest-private-key\\n-----END PRIVATE KEY-----\\n", "client_email": "test@test-project.iam.gserviceaccount.com", "client_id": "test-client-id", "auth_uri": "https://accounts.google.com/o/oauth2/auth", "token_uri": "https://oauth2.googleapis.com/token"}'
+        with patch.dict(os.environ, {'GOOGLE_CREDENTIALS_JSON': fake_credentials_json}), \
              patch('external_service.gemini_api.GEMINI_MODEL', 'gemini-pro'), \
              patch('external_service.gemini_api.GOOGLE_PROJECT_ID', 'gen-lang-client-0605794434'), \
              patch('external_service.gemini_api.GOOGLE_LOCATION', 'us-west1'):
             self.client = GeminiAPIClient()
 
     def test_init(self):
-        with patch('external_service.gemini_api.GEMINI_CREDENTIALS', 'test_credentials'), \
+        test_credentials_json = '{"type": "service_account", "project_id": "test-project"}'
+        with patch.dict(os.environ, {'GOOGLE_CREDENTIALS_JSON': test_credentials_json}), \
              patch('external_service.gemini_api.GEMINI_MODEL', 'test_model'):
             client = GeminiAPIClient()
-            assert client.api_key == 'test_credentials'
+            # GeminiAPIClient no longer has api_key attribute
             assert client.default_model == 'test_model'
             assert client.client is None
 
+    @patch('external_service.gemini_api.service_account')
     @patch('external_service.gemini_api.genai')
-    def test_initialize_success(self, mock_genai):
+    def test_initialize_success(self, mock_genai, mock_service_account):
         mock_client_instance = Mock()
         mock_genai.Client.return_value = mock_client_instance
-        
+        mock_credentials = Mock()
+        mock_service_account.Credentials.from_service_account_info.return_value = mock_credentials
+
         result = self.client.initialize()
-        
+
         assert result is True
         assert self.client.client is mock_client_instance
         mock_genai.Client.assert_called_once_with(
             vertexai=True,
             project='gen-lang-client-0605794434',
-            location='us-west1'
+            location='us-west1',
+            credentials=mock_credentials
         )
 
-    def test_initialize_no_api_key(self):
+    @patch('external_service.gemini_api.GOOGLE_PROJECT_ID', None)
+    def test_initialize_no_google_credentials(self):
         client = GeminiAPIClient()
-        client.api_key = None
-        
+
         with pytest.raises(APIError) as exc_info:
             client.initialize()
-        assert "Vertex AI APIの認証情報が設定されていません" in str(exc_info.value)
+        assert "GOOGLE_PROJECT_ID環境変数が設定されていません" in str(exc_info.value)
 
+    @patch('external_service.gemini_api.service_account')
     @patch('external_service.gemini_api.genai')
-    def test_initialize_genai_exception(self, mock_genai):
-        mock_genai.Client.side_effect = Exception("Connection error")
-        
+    def test_initialize_genai_exception(self, mock_genai, mock_service_account):
+        mock_service_account.Credentials.from_service_account_info.side_effect = Exception("Connection error")
+
         with pytest.raises(APIError) as exc_info:
             self.client.initialize()
-        assert "Vertex AI Gemini API初期化エラー" in str(exc_info.value)
+        assert "認証情報の作成エラー" in str(exc_info.value)
 
     @patch('external_service.gemini_api.GOOGLE_PROJECT_ID', None)
     def test_initialize_no_project_id(self):
@@ -63,7 +72,26 @@ class TestGeminiAPIClient:
     def test_initialize_no_location(self):
         with pytest.raises(APIError) as exc_info:
             self.client.initialize()
-        assert "GOOGLE_LOCATION環境変数が設定されていません" in str(exc_info.value)
+        assert "認証情報の作成エラー" in str(exc_info.value)
+
+    @patch.dict(os.environ, {}, clear=True)
+    @patch('external_service.gemini_api.GOOGLE_PROJECT_ID', 'test-project')
+    @patch('external_service.gemini_api.GOOGLE_LOCATION', 'us-west1')
+    @patch('external_service.gemini_api.genai')
+    def test_initialize_without_credentials_json(self, mock_genai):
+        mock_client_instance = Mock()
+        mock_genai.Client.return_value = mock_client_instance
+        client = GeminiAPIClient()
+
+        result = client.initialize()
+
+        assert result is True
+        assert client.client is mock_client_instance
+        mock_genai.Client.assert_called_once_with(
+            vertexai=True,
+            project='test-project',
+            location='us-west1'
+        )
 
     @patch('external_service.gemini_api.GEMINI_THINKING_BUDGET', None)
     def test_generate_content_without_thinking_budget(self):
@@ -157,25 +185,28 @@ class TestGeminiAPIClient:
         # Missing candidates_token_count
         delattr(mock_usage, 'candidates_token_count')
         mock_response.usage_metadata = mock_usage
-        
+
         mock_client = Mock()
         mock_client.models.generate_content.return_value = mock_response
         self.client.client = mock_client
-        
-        with pytest.raises(AttributeError):
+
+        with pytest.raises(APIError) as exc_info:
             self.client._generate_content("Test prompt", "gemini-pro")
+        assert "Vertex AI Gemini APIエラー" in str(exc_info.value)
 
     def test_generate_content_api_exception(self):
         mock_client = Mock()
         mock_client.models.generate_content.side_effect = Exception("API call failed")
         self.client.client = mock_client
-        
-        with pytest.raises(Exception) as exc_info:
+
+        with pytest.raises(APIError) as exc_info:
             self.client._generate_content("Test prompt", "gemini-pro")
+        assert "Vertex AI Gemini APIエラー" in str(exc_info.value)
         assert "API call failed" in str(exc_info.value)
 
+    @patch('external_service.gemini_api.service_account')
     @patch('external_service.gemini_api.genai')
-    def test_integration_initialize_and_generate(self, mock_genai):
+    def test_integration_initialize_and_generate(self, mock_genai, mock_service_account):
         # Integration test for initialize and generate_content
         mock_response = Mock()
         mock_response.text = "Integration test response"
@@ -183,20 +214,23 @@ class TestGeminiAPIClient:
         mock_usage.prompt_token_count = 50
         mock_usage.candidates_token_count = 100
         mock_response.usage_metadata = mock_usage
-        
+
         mock_client = Mock()
         mock_client.models.generate_content.return_value = mock_response
         mock_genai.Client.return_value = mock_client
-        
+        mock_credentials = Mock()
+        mock_service_account.Credentials.from_service_account_info.return_value = mock_credentials
+
         # Initialize the client
         result_init = self.client.initialize()
         assert result_init is True
-        
+
         # Verify Vertex AI client was created correctly
         mock_genai.Client.assert_called_once_with(
             vertexai=True,
             project='gen-lang-client-0605794434',
-            location='us-west1'
+            location='us-west1',
+            credentials=mock_credentials
         )
         
         # Generate content

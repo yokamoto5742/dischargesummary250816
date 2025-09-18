@@ -2,7 +2,7 @@ import streamlit as st
 
 from database.db import get_settings_repository
 from database.repositories import SettingsRepository
-from utils.config import CLAUDE_AVAILABLE, GEMINI_CREDENTIALS, GEMINI_FLASH_MODEL, GEMINI_MODEL, PROMPT_MANAGEMENT
+from utils.config import CLAUDE_AVAILABLE, GOOGLE_CREDENTIALS_JSON, GEMINI_FLASH_MODEL, GEMINI_MODEL, PROMPT_MANAGEMENT
 from utils.constants import APP_TYPE, DEFAULT_DEPARTMENT, DOCUMENT_TYPES, DEPARTMENT_DOCTORS_MAPPING, DEFAULT_DOCUMENT_TYPE
 from utils.prompt_manager import get_prompt_manager
 
@@ -107,9 +107,9 @@ def render_sidebar():
         selected_document_type = document_types[0]
 
     st.session_state.available_models = []
-    if GEMINI_MODEL and GEMINI_CREDENTIALS:
+    if GEMINI_MODEL and GOOGLE_CREDENTIALS_JSON:
         st.session_state.available_models.append("Gemini_Pro")
-    if GEMINI_FLASH_MODEL and GEMINI_CREDENTIALS:
+    if GEMINI_FLASH_MODEL and GOOGLE_CREDENTIALS_JSON:
         st.session_state.available_models.append("Gemini_Flash")
     if CLAUDE_AVAILABLE:
         st.session_state.available_models.append("Claude")

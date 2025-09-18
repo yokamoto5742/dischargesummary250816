@@ -69,7 +69,7 @@ AWS_REGION=ap-northeast-1
 ANTHROPIC_MODEL=apac.anthropic.claude-sonnet-4-20250514-v1:0
 
 # Gemini API
-GEMINI_CREDENTIALS=your_gemini_api_key
+GOOGLE_CREDENTIALS_JSON=your_google_credentials_json
 GEMINI_MODEL=gemini-2.0-flash-thinking-exp
 GEMINI_FLASH_MODEL=gemini-1.5-flash
 GEMINI_THINKING_BUDGET=10000
@@ -267,7 +267,7 @@ heroku config:set AWS_ACCESS_KEY_ID=your_aws_access_key_id
 heroku config:set AWS_SECRET_ACCESS_KEY=your_aws_secret_access_key
 heroku config:set AWS_REGION=ap-northeast-1
 heroku config:set ANTHROPIC_MODEL=apac.anthropic.claude-sonnet-4-20250514-v1:0
-heroku config:set GEMINI_CREDENTIALS=your_key
+heroku config:set GOOGLE_CREDENTIALS_JSON=your_google_credentials_json
 git push heroku main
 ```
 

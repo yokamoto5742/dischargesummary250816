@@ -10,13 +10,13 @@ def main():
     project_id = os.getenv("GOOGLE_PROJECT_ID")
     location = os.getenv("GOOGLE_LOCATION")
     model_name = os.getenv("GEMINI_FLASH_MODEL")
-    api_key = os.getenv("GEMINI_CREDENTIALS")
+    google_credentials_json = os.getenv("GOOGLE_CREDENTIALS_JSON")
 
     if not project_id:
         raise ValueError("GOOGLE_PROJECT_ID環境変数が設定されていません")
 
-    if not api_key:
-        raise ValueError("GEMINI_CREDENTIALS環境変数が設定されていません")
+    if not google_credentials_json:
+        raise ValueError("GOOGLE_CREDENTIALS_JSON環境変数が設定されていません")
 
     try:
         client = genai.Client(
