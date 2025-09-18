@@ -1,67 +1,96 @@
-from google import genai
-from google.genai import types
+import json
+import os
 from typing import Tuple
 
+from google import genai
+from google.genai import types
+from google.oauth2 import service_account
+
 from external_service.base_api import BaseAPIClient
-from utils.config import GEMINI_CREDENTIALS, GEMINI_MODEL, GEMINI_THINKING_BUDGET, GOOGLE_PROJECT_ID, GOOGLE_LOCATION
+from utils.config import GEMINI_MODEL, GEMINI_THINKING_BUDGET, GOOGLE_PROJECT_ID, GOOGLE_LOCATION
 from utils.constants import MESSAGES
 from utils.exceptions import APIError
 
 
 class GeminiAPIClient(BaseAPIClient):
     def __init__(self):
-        super().__init__(GEMINI_CREDENTIALS, GEMINI_MODEL)
+        super().__init__(None, GEMINI_MODEL)
         self.client = None
 
     def initialize(self) -> bool:
         try:
             if not GOOGLE_PROJECT_ID:
                 raise APIError(MESSAGES["VERTEX_AI_PROJECT_MISSING"])
+
+            google_credentials_json = os.environ.get("GOOGLE_CREDENTIALS_JSON")
             
-            if not GOOGLE_LOCATION:
-                raise APIError(MESSAGES["VERTEX_AI_LOCATION_MISSING"])
+            if google_credentials_json:
+                try:
+                    credentials_dict = json.loads(google_credentials_json)
+
+                    credentials = service_account.Credentials.from_service_account_info(
+                        credentials_dict,
+                        scopes=['https://www.googleapis.com/auth/cloud-platform']
+                    )
+
+                    self.client = genai.Client(
+                        vertexai=True,
+                        project=GOOGLE_PROJECT_ID,
+                        location=GOOGLE_LOCATION,
+                        credentials=credentials
+                    )
+                    
+                    print(f"Vertex AI Client initialized successfully for project: {GOOGLE_PROJECT_ID}")
+                    
+                except json.JSONDecodeError as e:
+                    raise APIError(f"GOOGLE_CREDENTIALS_JSON環境変数の解析エラー: {str(e)}")
+                except KeyError as e:
+                    raise APIError(f"認証情報に必要なフィールドが不足: {str(e)}")
+                except Exception as e:
+                    raise APIError(f"認証情報の作成エラー: {str(e)}")
+            else:
+                self.client = genai.Client(
+                    vertexai=True,
+                    project=GOOGLE_PROJECT_ID,
+                    location=GOOGLE_LOCATION,
+                )
             
-            if not self.api_key:
-                raise APIError(MESSAGES["VERTEX_AI_CREDENTIALS_MISSING"])
-            
-            self.client = genai.Client(
-                vertexai=True,
-                project=GOOGLE_PROJECT_ID,
-                location=GOOGLE_LOCATION,
-            )
             return True
-        except APIError as e:
-            raise e
+        except APIError:
+            raise
         except Exception as e:
             raise APIError(MESSAGES["VERTEX_AI_INIT_ERROR"].format(error=str(e)))
 
     def _generate_content(self, prompt: str, model_name: str) -> Tuple[str, int, int]:
-        if GEMINI_THINKING_BUDGET:
-            response = self.client.models.generate_content(
-                model=model_name,
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    thinking_config=types.ThinkingConfig(
-                        thinking_budget=GEMINI_THINKING_BUDGET
+        try:
+            if GEMINI_THINKING_BUDGET:
+                response = self.client.models.generate_content(
+                    model=model_name,
+                    contents=prompt,
+                    config=types.GenerateContentConfig(
+                        thinking_config=types.ThinkingConfig(
+                            thinking_budget=GEMINI_THINKING_BUDGET
+                        )
                     )
                 )
-            )
-        else:
-            response = self.client.models.generate_content(
-                model=model_name,
-                contents=prompt
-            )
+            else:
+                response = self.client.models.generate_content(
+                    model=model_name,
+                    contents=prompt
+                )
 
-        if hasattr(response, 'text'):
-            summary_text = response.text
-        else:
-            summary_text = str(response)
+            if hasattr(response, 'text'):
+                summary_text = response.text
+            else:
+                summary_text = str(response)
 
-        input_tokens = 0
-        output_tokens = 0
+            input_tokens = 0
+            output_tokens = 0
 
-        if hasattr(response, 'usage_metadata'):
-            input_tokens = response.usage_metadata.prompt_token_count
-            output_tokens = response.usage_metadata.candidates_token_count
+            if hasattr(response, 'usage_metadata'):
+                input_tokens = response.usage_metadata.prompt_token_count
+                output_tokens = response.usage_metadata.candidates_token_count
 
-        return summary_text, input_tokens, output_tokens
+            return summary_text, input_tokens, output_tokens
+        except Exception as e:
+            raise APIError(MESSAGES["VERTEX_AI_API_ERROR"].format(error=str(e)))
