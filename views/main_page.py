@@ -28,21 +28,18 @@ def render_input_section():
     current_prescription = st.text_area(
         "退院時処方(現在の処方)",
         height=70,
-        placeholder="処方内容を入力してください...",
         key="current_prescription"
     )
 
     input_text = st.text_area(
         "カルテ記載",
         height=70,
-        placeholder="カルテテキストを貼り付けてください...",
         key="input_text"
     )
 
     additional_info = st.text_area(
         "追加情報",
         height=70,
-        placeholder="追加情報を入力してください...",
         key="additional_info"
     )
 
