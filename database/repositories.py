@@ -183,14 +183,11 @@ class UsageStatisticsRepository(BaseRepository):
 
         return query
 
-    def _apply_document_type_filter(self, query, document_type_filter: Optional[str]):
+    def apply_document_type_filter(self, query, document_type_filter: Optional[str]):
         if not document_type_filter or document_type_filter == "すべて":
             return query
 
-        if document_type_filter == "不明":
-            return query.filter(SummaryUsage.document_types.is_(None))
-        else:
-            return query.filter(SummaryUsage.document_types == document_type_filter)
+        return query.filter(SummaryUsage.document_types == document_type_filter)
 
     def _apply_filters(self, query, start_date: datetime.datetime, end_date: datetime.datetime,
                        model_filter: Optional[str] = None, document_type_filter: Optional[str] = None):
