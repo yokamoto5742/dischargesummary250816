@@ -84,7 +84,7 @@ AWS_REGION=ap-northeast-1
 ANTHROPIC_MODEL=apac.anthropic.claude-sonnet-4-20250514-v1:0
 
 # Vertex AI + Gemini API
-GOOGLE_CREDENTIALS_JSON='{"type":"service_account","project_id":"your-project","private_key_id":"...","private_key":"-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n","client_email":"your-service-account@your-project.iam.gserviceaccount.com","client_id":"...","auth_uri":"https://accounts.google.com/o/oauth2/auth","token_uri":"https://oauth2.googleapis.com/token"}'
+GOOGLE_CREDENTIALS_JSON=your_JSON_key
 GOOGLE_PROJECT_ID=your-google-cloud-project-id
 GOOGLE_LOCATION=us-west1
 GEMINI_MODEL=gemini-2.0-flash-thinking-exp
@@ -176,15 +176,7 @@ python -m pytest tests/ -v
 # カバレッジ付きテスト
 python -m pytest tests/ -v --cov=. --cov-report=html
 
-# 手動通知機能
-powershell -Command "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.MessageBox]::Show('タスクが完了しました', 'Claude Code', 'OK', 'Information')"
 ```
-
-### 自動通知システム
-プロジェクトには自動通知のhooksが設定済み：
-- **Stop Hook**: Claude Code停止時に「作業が完了しました」
-- **SessionEnd Hook**: セッション終了時に通知
-- 設定ファイル: `.claude/settings.local.json`
 
 ### プロジェクト構造
 ```
@@ -254,7 +246,6 @@ powershell -Command "Add-Type -AssemblyName System.Windows.Forms; [System.Window
 - トークン使用量と処理時間の管理
 
 ### テスト状況
-- **✅ 全247テスト通過** (2025-01-29現在)
 - 最近修正されたテスト:
   - `tests/external_service/test_gemini_api.py` - GOOGLE_CREDENTIALS_JSON認証対応
   - `tests/services/test_model_service.py` - 認証情報変数名更新
@@ -271,7 +262,7 @@ powershell -Command "Add-Type -AssemblyName System.Windows.Forms; [System.Window
 
 ## 変更履歴
 
-### v2.1.0 (2025-01-29) - Vertex AI認証統合
+### v2.1.0 (2025-09-15) - Vertex AI認証統合
 #### 🔄 認証システム変更
 - **BREAKING CHANGE**: `GEMINI_CREDENTIALS` → `GOOGLE_CREDENTIALS_JSON`に変更
 - Google Cloud Service Account JSON認証に移行
