@@ -39,7 +39,7 @@ class BaseAPIClient(ABC):
         prompt = f"{prompt_template}\n【カルテ情報】\n{medical_text}"
 
         if current_prescription.strip():
-            prompt += f"\n【現在の処方】\n{current_prescription}"
+            prompt += f"\n【退院時処方(現在の処方)】\n{current_prescription}"
 
         prompt += f"\n【追加情報】{additional_info}"
 
