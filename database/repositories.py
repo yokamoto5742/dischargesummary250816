@@ -273,7 +273,7 @@ class UsageStatisticsRepository(BaseRepository):
                 return query.order_by(desc(SummaryUsage.date)).all()
 
         except Exception as e:
-            raise DatabaseError(f"使用記録の取得に失敗しました: {str(e)}")
+            raise DatabaseError(f"使用履歴の取得に失敗しました: {str(e)}")
 
 
 class SettingsRepository(BaseRepository):
