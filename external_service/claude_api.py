@@ -16,7 +16,6 @@ class ClaudeAPIClient(BaseAPIClient):
         self.aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
         self.aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
         self.aws_region = os.getenv("AWS_REGION", "us-east-1")
-
         self.bedrock_model = os.getenv("ANTHROPIC_MODEL")
 
         api_key = "bedrock" if all([self.aws_access_key_id, self.aws_secret_access_key]) else None
