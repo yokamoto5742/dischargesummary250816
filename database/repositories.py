@@ -183,7 +183,7 @@ class UsageStatisticsRepository(BaseRepository):
 
         return query
 
-    def apply_document_type_filter(self, query, document_type_filter: Optional[str]):
+    def _apply_document_type_filter(self, query, document_type_filter: Optional[str]):
         if not document_type_filter or document_type_filter == "すべて":
             return query
 
