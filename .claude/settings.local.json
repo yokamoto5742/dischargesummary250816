@@ -16,7 +16,15 @@
       "Bash(claude config list)",
       "Bash(powershell:*)",
       "Bash(claude config get hooks)",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(move teststest_config_manager.py testsutils )",
+      "Bash(move teststest_helpers.py testsutils )",
+      "Bash(move teststest_file_searcher.py testsservice )",
+      "Bash(move teststest_search_indexer.py testsservice )",
+      "Bash(move teststest_indexed_file_searcher.py testsservice )",
+      "Bash(move teststest_file_opener.py testsservice )",
+      "Bash(move teststest_handlers.py testsservice)",
+      "Bash(python -m pytest tests/ -v --tb=short --disable-warnings)"
     ],
     "deny": [
       "Bash(sudo:*)",
@@ -29,9 +37,11 @@
       "Read(.env.*)",
       "Read(id_rsa)",
       "Read(id_ed25519)",
+      "Read(docs/LICENSE*)",
       "Read(**/*token*)",
       "Read(**/*key*)",
       "Write(.env*)",
+      "Write(docs/LICENSE*)",
       "Write(**/secrets/**)",
       "Bash(curl:*)",
       "Bash(wget:*)",
@@ -52,29 +62,18 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -Command \"Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.MessageBox]::Show('作業が完了しました', 'Claude Code', 'OK', 'Information')\""
-          }
-        ]
-      }
-    ],
-    "SubagentStop": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "powershell -Command \"Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.MessageBox]::Show('作業が完了しました', 'Claude Code', 'OK', 'Information')\""
+            "command": "powershell -Command \"Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.MessageBox]::Show('タスクが完了しました', 'Claude Code', 'OK', 'Information')\""
           }
         ]
       }
     ],
     "SessionEnd": [
       {
-        "matcher": "*", 
+        "matcher": "*",
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -Command \"Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.MessageBox]::Show('Claude Code セッションが終了しました', 'Claude Code', 'OK', 'Information')\""
+            "command": "powershell -Command \"Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.MessageBox]::Show('セッションが終了しました', 'Claude Code', 'OK', 'Information')\""
           }
         ]
       }
