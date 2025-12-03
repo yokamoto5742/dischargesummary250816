@@ -1,7 +1,7 @@
 from typing import Tuple
 
 from utils.config import (ANTHROPIC_MODEL, GOOGLE_CREDENTIALS_JSON,
-                          GEMINI_FLASH_MODEL, GEMINI_MODEL, MAX_TOKEN_THRESHOLD)
+                          GEMINI_MODEL, MAX_TOKEN_THRESHOLD)
 from utils.constants import DEFAULT_DEPARTMENT, DOCUMENT_TYPES, MESSAGES
 from utils.exceptions import APIError
 from utils.prompt_manager import get_prompt_manager
@@ -54,7 +54,6 @@ class ModelService:
         provider_mapping = {
             "Claude": ("claude", ANTHROPIC_MODEL),
             "Gemini_Pro": ("gemini", GEMINI_MODEL),
-            "Gemini_Flash": ("gemini", GEMINI_FLASH_MODEL),
         }
 
         if selected_model not in provider_mapping:

@@ -130,14 +130,12 @@ class TestModelService:
 
     @patch('services.model_service.ANTHROPIC_MODEL', "apac.anthropic.claude-sonnet-4-20250514-v1:0")
     @patch('services.model_service.GEMINI_MODEL', "gemini-pro")
-    @patch('services.model_service.GEMINI_FLASH_MODEL', "gemini-flash")
     def test_get_provider_and_model_all_options(self):
         test_cases = [
             ("Claude", ("claude", "apac.anthropic.claude-sonnet-4-20250514-v1:0")),
-            ("Gemini_Pro", ("gemini", "gemini-pro")),
-            ("Gemini_Flash", ("gemini", "gemini-flash"))
+            ("Gemini_Pro", ("gemini", "gemini-pro"))
         ]
-        
+
         for selected_model, expected in test_cases:
             result = ModelService.get_provider_and_model(selected_model)
             assert result == expected

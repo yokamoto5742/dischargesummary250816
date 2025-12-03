@@ -93,50 +93,63 @@ class TestGeminiAPIClient:
             location='us-west1'
         )
 
-    @patch('external_service.gemini_api.GEMINI_THINKING_BUDGET', None)
-    def test_generate_content_without_thinking_budget(self):
-        mock_response = Mock()
-        mock_response.text = "Generated summary text"
-        mock_usage = Mock()
-        mock_usage.prompt_token_count = 150
-        mock_usage.candidates_token_count = 300
-        mock_response.usage_metadata = mock_usage
-        
-        mock_client = Mock()
-        mock_client.models.generate_content.return_value = mock_response
-        self.client.client = mock_client
-        
-        result = self.client._generate_content("Test prompt", "gemini-pro")
-        
-        assert result == ("Generated summary text", 150, 300)
-        mock_client.models.generate_content.assert_called_once_with(
-            model="gemini-pro",
-            contents="Test prompt"
-        )
-
-    @patch('external_service.gemini_api.GEMINI_THINKING_BUDGET', 1000)
+    @patch('external_service.gemini_api.GEMINI_THINKING_LEVEL', 'HIGH')
     @patch('external_service.gemini_api.types')
-    def test_generate_content_with_thinking_budget(self, mock_types):
+    def test_generate_content_with_thinking_level_high(self, mock_types):
         mock_thinking_config = Mock()
         mock_types.ThinkingConfig.return_value = mock_thinking_config
         mock_generate_config = Mock()
         mock_types.GenerateContentConfig.return_value = mock_generate_config
-        
+        mock_types.ThinkingLevel.HIGH = 'HIGH'
+
         mock_response = Mock()
         mock_response.text = "Generated summary text"
         mock_usage = Mock()
         mock_usage.prompt_token_count = 150
         mock_usage.candidates_token_count = 300
         mock_response.usage_metadata = mock_usage
-        
+
         mock_client = Mock()
         mock_client.models.generate_content.return_value = mock_response
         self.client.client = mock_client
-        
+
         result = self.client._generate_content("Test prompt", "gemini-pro")
-        
+
         assert result == ("Generated summary text", 150, 300)
-        mock_types.ThinkingConfig.assert_called_once_with(thinking_budget=1000)
+        mock_types.ThinkingConfig.assert_called_once_with(thinking_level='HIGH')
+        mock_types.GenerateContentConfig.assert_called_once_with(
+            thinking_config=mock_thinking_config
+        )
+        mock_client.models.generate_content.assert_called_once_with(
+            model="gemini-pro",
+            contents="Test prompt",
+            config=mock_generate_config
+        )
+
+    @patch('external_service.gemini_api.GEMINI_THINKING_LEVEL', 'LOW')
+    @patch('external_service.gemini_api.types')
+    def test_generate_content_with_thinking_level_low(self, mock_types):
+        mock_thinking_config = Mock()
+        mock_types.ThinkingConfig.return_value = mock_thinking_config
+        mock_generate_config = Mock()
+        mock_types.GenerateContentConfig.return_value = mock_generate_config
+        mock_types.ThinkingLevel.LOW = 'LOW'
+
+        mock_response = Mock()
+        mock_response.text = "Generated summary text"
+        mock_usage = Mock()
+        mock_usage.prompt_token_count = 150
+        mock_usage.candidates_token_count = 300
+        mock_response.usage_metadata = mock_usage
+
+        mock_client = Mock()
+        mock_client.models.generate_content.return_value = mock_response
+        self.client.client = mock_client
+
+        result = self.client._generate_content("Test prompt", "gemini-pro")
+
+        assert result == ("Generated summary text", 150, 300)
+        mock_types.ThinkingConfig.assert_called_once_with(thinking_level='LOW')
         mock_types.GenerateContentConfig.assert_called_once_with(
             thinking_config=mock_thinking_config
         )
@@ -274,7 +287,7 @@ class TestGeminiAPIClient:
         assert call_args[1]['model'] == "gemini-pro"
         assert call_args[1]['contents'] == complex_prompt
 
-    @patch('external_service.gemini_api.GEMINI_THINKING_BUDGET', 500)
+    @patch('external_service.gemini_api.GEMINI_THINKING_LEVEL', 'HIGH')
     @patch('external_service.gemini_api.types')
     def test_generate_content_thinking_config_creation(self, mock_types):
         mock_response = Mock()
@@ -282,15 +295,16 @@ class TestGeminiAPIClient:
         mock_response.usage_metadata = Mock()
         mock_response.usage_metadata.prompt_token_count = 100
         mock_response.usage_metadata.candidates_token_count = 200
-        
+        mock_types.ThinkingLevel.HIGH = 'HIGH'
+
         mock_client = Mock()
         mock_client.models.generate_content.return_value = mock_response
         self.client.client = mock_client
-        
+
         self.client._generate_content("Test prompt", "gemini-pro")
-        
-        # Verify that ThinkingConfig is created with correct budget
-        mock_types.ThinkingConfig.assert_called_once_with(thinking_budget=500)
+
+        # Verify that ThinkingConfig is created with correct thinking level
+        mock_types.ThinkingConfig.assert_called_once_with(thinking_level='HIGH')
         mock_types.GenerateContentConfig.assert_called_once()
 
     def test_generate_content_str_conversion(self):
