@@ -69,7 +69,7 @@ class GeminiAPIClient(BaseAPIClient):
                     contents=prompt,
                     config=types.GenerateContentConfig(
                         thinking_config=types.ThinkingConfig(
-                            thinking_budget=GEMINI_THINKING_BUDGET
+                            thinking_level=types.ThinkingLevel.HIGH
                         )
                     )
                 )
